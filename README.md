@@ -1,2 +1,23 @@
-# php-csas
-PHP CSAS extension, includes development environment for now
+# PHP-CSAS
+
+Context-Sensitive Auto-Sanitization for PHP
+
+## Overview
+- See `http://www.kchodorow.com/blog/2011/08/11/php-extensions-made-eldrich-hello-world/` for how this initial extension was written.
+- File Structure Overview:
+	- `config.m4`: C config file for the CSAS extension.
+	- `php_csas.c`: C Source file for the extension.
+	- `php_csas.h`: C Header file for the extension.
+
+## To install
+- Make sure that `$PHPDIR/php-install-directory/bin` is in your path. Check with `echo $PATH`.
+- Make sure that `php.ini` exists at `$PHPDIR/php-install-directory/lib`. If it does not, copy `php.ini-development` from `$PHPDIR` to that location.
+- Add `extension=csas.so` to the end of the `php.ini` file.
+- In the PHP-CSAS directory, run the following sequence of commands to install the extension:
+	- `phpize`: Creates all of the necessary configure and make files to the extension repository. Don't worry, all of these created files are in the `.gitignore`.
+	- `./configure`: Configure the extension.
+	- `make`: Build the extension.
+	- `sudo make install`: Install the extension.
+		- You should see something along the lines of `Installing shared extensions: $PHPDIR/install-debug-zts/lib/php/extensions/debug-zts-20090626/`
+- To test that this works, run `php -r 'csas_main();'`.
+	- If it prints out `Hello, CSAS!` then it installed into PHP correctly!

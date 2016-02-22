@@ -32,5 +32,5 @@ ZEND_GET_MODULE(csas)
 // actual non-template code!
 PHP_FUNCTION(csas_main) {
     // php_printf is PHP's version of printf, it's essentially "echo" from C
-    php_printf("Hello, CSAS!");
+    php_printf("Hello, CSAS!\n");
 }
