@@ -18,6 +18,6 @@ Context-Sensitive Auto-Sanitization for PHP
 	- `./configure`: Configure the extension.
 	- `make`: Build the extension.
 	- `sudo make install`: Install the extension.
-		- You should see something along the lines of `Installing shared extensions: $PHPDIR/install-debug-zts/lib/php/extensions/debug-zts-20090626/`
+		- You should see something along the lines of `Installing shared extensions: $PHPDIR/php-install-directory//lib/php/extensions/debug-zts-20090626/`
 - To test that this works, run `php -r 'csas_main();'`.
 	- If it prints out `Hello, CSAS!` then it installed into PHP correctly!
