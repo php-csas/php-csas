@@ -10,6 +10,7 @@ Context-Sensitive Auto-Sanitization for PHP
 	- `php_csas.h`: C Header file for the extension.
 
 ## To install
+- Make sure that the debian package `autoconf` is installed. Run `sudo apt-get install autoconf` to check. Install it if its not already installed.
 - Make sure that `$PHPDIR/php-install-directory/bin` is in your path. Check with `echo $PATH`.
 - Make sure that `php.ini` exists at `$PHPDIR/php-install-directory/lib`. If it does not, copy `php.ini-development` from `$PHPDIR` to that location.
 - Add `extension=csas.so` to the end of the `php.ini` file.
@@ -18,6 +19,6 @@ Context-Sensitive Auto-Sanitization for PHP
 	- `./configure`: Configure the extension.
 	- `make`: Build the extension.
 	- `sudo make install`: Install the extension.
-		- You should see something along the lines of `Installing shared extensions: $PHPDIR/install-debug-zts/lib/php/extensions/debug-zts-20090626/`
+		- You should see something along the lines of `Installing shared extensions: $PHPDIR/php-install-directory/lib/php/extensions/debug-zts-20090626/`
 - To test that this works, run `php -r 'csas_main();'`.
 	- If it prints out `Hello, CSAS!` then it installed into PHP correctly!
