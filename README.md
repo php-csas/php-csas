@@ -5,11 +5,15 @@ Context-Sensitive Auto-Sanitization for PHP
 ## Overview
 - See `http://www.kchodorow.com/blog/2011/08/11/php-extensions-made-eldrich-hello-world/` for how this initial extension was written.
 - File Structure Overview:
-	- `config.m4`: C config file for the CSAS extension.
+	- `config.m4` and `config.w32`: C config file for the CSAS extension.
 	- `php_csas.c`: C Source file for the extension.
 	- `php_csas.h`: C Header file for the extension.
 
 ## To install
+- Add the lines `extension=taint.so` and `taint.enable = 1` to the installed PHP's php.ini file. This is in `PHP_HOME/php-install-directory/lib/php.ini` for the purposes of this project (in reference to the dev environment).
+- Run `build_extension.sh`.
+
+## To install (Old instructions)
 - Make sure that the debian package `autoconf` is installed. Run `sudo apt-get install autoconf` to check. Install it if its not already installed.
 - Make sure that `$PHPDIR/php-install-directory/bin` is in your path. Check with `echo $PATH`.
 - Make sure that `php.ini` exists at `$PHPDIR/php-install-directory/lib`. If it does not, copy `php.ini-development` from `$PHPDIR` to that location.
