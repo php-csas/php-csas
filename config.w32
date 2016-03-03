@@ -1,0 +1,9 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_ENABLE("taint", "enable taint support", "yes");
+
+if (PHP_TAINT != "no") {
+	EXTENSION("taint", "taint.c");
+}
+
