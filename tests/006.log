@@ -1,0 +1,17 @@
+
+---- EXPECTED OUTPUT
+Warning: test1(): Attempt to echo a string that might be tainted in %s006.php on line %d
+tainted string.
+Warning: test2(): Attempt to echo a string that might be tainted in %s006.php on line %d
+tainted string.
+Warning: test1(): Attempt to echo a string that might be tainted in %s006.php on line %d
+tainted string.
+Warning: test2(): Attempt to echo a string that might be tainted in %s006.php on line %d
+tainted string.
+Warning: test1(): Attempt to echo a string that might be tainted in %s006.php on line %d
+tainted string.
+Warning: test2(): Attempt to echo a string that might be tainted in %s006.php on line %d
+tainted string.
+---- ACTUAL OUTPUT
+/home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/taint.so: undefined symbol: print
+---- FAILED

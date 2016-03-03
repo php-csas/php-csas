@@ -1,0 +1,5 @@
+bool(true)
+
+Warning: main(): Attempt to echo a string that might be tainted in %sbug61816.php on line %d
+tainted string.
+bool(true)

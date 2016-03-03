@@ -1,0 +1,9 @@
+
+---- EXPECTED OUTPUT
+Warning: main(): Attempt to echo a string that might be tainted in %sbug63123.php on line %d
+a
+Warning: main(): Attempt to echo a string that might be tainted in %Sbug63123.php on line %d
+b
+---- ACTUAL OUTPUT
+/home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/taint.so: undefined symbol: print
+---- FAILED

@@ -1,0 +1,7 @@
+001+ /home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/taint.so: undefined symbol: print
+001- Warning: main(): Attempt to print a string that might be tainted in %s002.php on line %d
+002- tainted string.
+003- Warning: file_put_contents(): Second argument contains data that might be tainted in %s002.php on line %d
+004- tainted string.+
+005- 
+006- Warning: eval(): Eval code contains data that might be tainted in %s002.php on line %d
