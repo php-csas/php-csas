@@ -625,11 +625,33 @@ char* cast_zval_to_string(zval *z) {
 	return Z_STRVAL_P(z);
 }
 
+// args are zend_execute_data *execute_data TSRMLS_DC
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
-    zend_op *opline = execute_data->opline;
+	// defined in zend_compile.h, line 106
+/*
+struct _zend_op {
+        opcode_handler_t handler;
+        znode_op op1;
+        znode_op op2;
+        znode_op result;
+        ulong extended_value;
+        uint lineno;
+        zend_uchar opcode;
+        zend_uchar op1_type;
+        zend_uchar op2_type;
+        zend_uchar result_type;
+};
+*/
+
+	zend_op *opline = execute_data->opline;
 	zval *op1 = NULL;
 	csas_free_op free_op1 = {0};
 
+	php_printf("<br>");
+	php_printf("Hello world <br>\n");
+	php_printf("CSAS_OP1_TYPE(opline): %d<br>\n", CSAS_OP1_TYPE(opline));
+
+	//  define CSAS_OP1_TYPE(n)         ((n)->op1_type)
 	switch(CSAS_OP1_TYPE(opline)) {
 		case IS_TMP_VAR:
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 5)
@@ -639,7 +661,11 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 #endif
 			break;
 		case IS_VAR:
+			// CSAS_T(((n)->op1.var))
 			op1 = CSAS_T(CSAS_OP1_VAR(opline)).var.ptr;
+			break;
+		case IS_CONST:
+			op1 = &(opline->op1.literal->constant);
 			break;
 		case IS_CV: {
 				zval **t = CSAS_CV_OF(CSAS_OP1_VAR(opline));
