@@ -10,6 +10,7 @@ Context-Sensitive Auto-Sanitization for PHP
 	- `php_csas.h`: C Header file for the extension.
 
 ## To install
+- `mv $PHP_HOME/php.ini-Development $PHP_HOME/php-install-directory/lib/php.ini`
 - Add the lines `extension=taint.so` and `taint.enable = 1` to the installed PHP's php.ini file. This is in `PHP_HOME/php-install-directory/lib/php.ini` for the purposes of this project (in reference to the dev environment).
 - Run `build_extension.sh`.
 
