@@ -44,6 +44,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_csas.h"
+#include "htmlparser/htmlparser.cc"
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
