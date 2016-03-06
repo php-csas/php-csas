@@ -653,16 +653,20 @@ struct _zend_op {
 
 	//  define CSAS_OP1_TYPE(n)         ((n)->op1_type)
 	switch(CSAS_OP1_TYPE(opline)) {
+		// TEMPORARY VALUE (i.e. when you do a string concatenation temp variables are made)
 		case IS_TMP_VAR:
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 5)
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data, &free_op1 TSRMLS_CC);
 #else
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data->Ts, &free_op1 TSRMLS_CC);
 #endif
+			php_printf("IS_TMP_VAR: OP1: %s", op1);
 			break;
+		// VARIABLE VALUE
 		case IS_VAR:
 			// CSAS_T(((n)->op1.var))
 			op1 = CSAS_T(CSAS_OP1_VAR(opline)).var.ptr;
+			php_printf("IS_VAR: OP1: %s", op1);
 			break;
 		case IS_CONST:
 			op1 = &(opline->op1.literal->constant);
@@ -677,6 +681,7 @@ struct _zend_op {
 						op1 = *t;
 					}
 				}
+				php_printf("IS_CV: OP1: %s", op1);
 		    }
 			break;
 	}
