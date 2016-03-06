@@ -26,3 +26,5 @@ Context-Sensitive Auto-Sanitization for PHP
 		- You should see something along the lines of `Installing shared extensions: $PHPDIR/php-install-directory/lib/php/extensions/debug-zts-20090626/`
 - To test that this works, run `php -r 'csas_main();'`.
 	- If it prints out `Hello, CSAS!` then it installed into PHP correctly!
+# test-sites
+Place these files in your web root to test CSAS.
