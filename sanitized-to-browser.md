@@ -15,7 +15,7 @@ Below is a test case that needs to be done in a branch of the php-csas repo to m
 
 # Do This
 
-- Create a new branch in the php-csas repo named `sanitization-to-browser`
+- Create a new branch in the php-csas repo named `zval-mod`
 - In the extension do the following:
 	- Modify the echo_handler function to make any string echoed or printed be "hello world"
 - Create a PHP file following the *pseudocode* below:
