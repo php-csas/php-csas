@@ -3,10 +3,9 @@
 Context-Sensitive Auto-Sanitization for PHP
 
 ## Overview
-- See `http://www.kchodorow.com/blog/2011/08/11/php-extensions-made-eldrich-hello-world/` for how this initial extension was written.
 - File Structure Overview:
 	- `config.m4` and `config.w32`: C config file for the CSAS extension.
-	- `php_csas.c`: C Source file for the extension.
+	- `csas.c`: C Source file for the extension.
 	- `php_csas.h`: C Header file for the extension.
 
 ## To install
