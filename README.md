@@ -1,6 +1,7 @@
 # PHP-CSAS
+[![Build Status](https://travis-ci.org/php-csas/php-csas.svg?branch=master)](https://travis-ci.org/php-csas/php-csas)
 
-Context-Sensitive Auto-Sanitization for PHP
+- *One Goal*: Context-Sensitive Auto-Sanitization for PHP
 
 ## Overview
 - File Structure Overview:
