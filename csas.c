@@ -630,17 +630,24 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 	zval *op1 = NULL;
 	csas_free_op free_op1 = {0};
 
+	php_printf("<br>CSAS opline: %d<br>", opline);
+
 	switch(CSAS_OP1_TYPE(opline)) {
+		// TEMPORARY VALUE (i.e. when you do a string concatenation temp variables are made)
 		case IS_TMP_VAR:
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 5)
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data, &free_op1 TSRMLS_CC);
 #else
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data->Ts, &free_op1 TSRMLS_CC);
 #endif
+			php_printf("IS_TMP_VAR: OP1: %s", op1);
 			break;
+		// VARIABLE VALUE
 		case IS_VAR:
 			op1 = CSAS_T(CSAS_OP1_VAR(opline)).var.ptr;
+			php_printf("IS_VAR: OP1: %s", op1);
 			break;
+		// COMPILED VARIABLE
 		case IS_CV: {
 				zval **t = CSAS_CV_OF(CSAS_OP1_VAR(opline));
 				if (t && *t) {
@@ -651,6 +658,7 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 						op1 = *t;
 					}
 				}
+				php_printf("IS_CV: OP1: %s", op1);
 		    }
 			break;
 	}
