@@ -41,9 +41,9 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include "htmlparser/statemachine.h"
-#include "htmlparser/htmlparser.h"
-#include "htmlparser/jsparser.h"
+#include "statemachine.h"
+#include "htmlparser.h"
+#include "jsparser.h"
 
 /* So we can support both C and C++ compilers, we use the CAST() macro instead
  * of using C style casts or static_cast<>() directly.
@@ -59,7 +59,7 @@ namespace ctemplate_htmlparser {
 #endif
 
 /* Generated state machine definition. */
-#include "htmlparser/htmlparser_fsm.h"
+#include "htmlparser_fsm.h"
 
 #define is_js_attribute(attr) ((attr)[0] == 'o' && (attr)[1] == 'n')
 #define is_style_attribute(attr) (strcmp((attr), "style") == 0)
@@ -1029,7 +1029,7 @@ int htmlparser_attr_type(htmlparser_ctx *ctx)
         attr && strcmp(attr, "content") == 0) {
 
       const char* value = htmlparser_value(ctx);
-      meta_redirect_type_enum redirect_type = meta_redirect_type(value);
+      enum meta_redirect_type_enum redirect_type = meta_redirect_type(value);
 
       if (redirect_type == META_REDIRECT_TYPE_URL ||
           redirect_type == META_REDIRECT_TYPE_URL_START)

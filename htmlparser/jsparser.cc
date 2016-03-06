@@ -36,8 +36,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "htmlparser/statemachine.h"
-#include "htmlparser/jsparser.h"
+#include "statemachine.h"
+#include "jsparser.h"
 
 /* So we can support both C and C++ compilers, we use the CAST() macro instead
  * of using C style casts or static_cast<>() directly.
@@ -53,7 +53,7 @@ namespace ctemplate_htmlparser {
 #endif /* __cplusplus */
 
 /* Generated state machine definition. */
-#include "htmlparser/jsparser_fsm.h"
+#include "jsparser_fsm.h"
 
 /* List of keywords that can precede a regular expression literal. Taken from:
  * http://www.mozilla.org/js/language/js20-2000-07/rationale/syntax.html

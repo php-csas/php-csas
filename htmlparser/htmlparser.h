@@ -35,9 +35,9 @@
 #ifndef SECURITY_STREAMHTMLPARSER_HTMLPARSER_H
 #define SECURITY_STREAMHTMLPARSER_HTMLPARSER_H
 
-#include <config.h>
-#include "htmlparser/statemachine.h"
-#include "htmlparser/jsparser.h"
+//#include <config.h>
+#include "statemachine.h"
+#include "jsparser.h"
 
 // Annoying stuff for windows in opensource-land -- make sure clients
 // (in this case unittests) can import the functions.
