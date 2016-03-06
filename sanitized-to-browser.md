@@ -1,5 +1,5 @@
 # Overview
-- We need to: Determine best method for modifying zval before it is echo'd
+- We need to determine the best method for modifying a zval before it is echo'd
 	- probably want to allocate new **STRING** zval (regardless of original object type) and set its value
 	- PHP engine has some unusual memory allocation functions (see https://secure.php.net/manual/en/internals2.memory.management.php)
 	- need to ensure we don't overwrite original zval
