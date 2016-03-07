@@ -1,10 +1,11 @@
 Important problems to solve:
 
 1) Get string representation of arbitrary zvals (not just strings), as they will be printed out
+	- DONE
 	- this is the value we will use to update HTML parser and sanitize
 	- solution: function zend_make_printable_zval (defined in zend.c)
 		- requires allocating a new zval
-		- figure out how to allocate a zval
+		- figure out how to allocate a zval - turns out it's really easy, just use a stack-allocated zval
 
 2) Determine best method for modifying zval before it is echo'd
 	- probably want to allocate new **STRING** zval (regardless of original object type) and set its value
