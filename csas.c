@@ -647,10 +647,6 @@ struct _zend_op {
 	zval *op1 = NULL;
 	csas_free_op free_op1 = {0};
 
-	php_printf("<br>");
-	php_printf("Hello world <br>\n");
-	php_printf("CSAS_OP1_TYPE(opline): %d<br>\n", CSAS_OP1_TYPE(opline));
-
 	//  define CSAS_OP1_TYPE(n)         ((n)->op1_type)
 	switch(CSAS_OP1_TYPE(opline)) {
 		// TEMPORARY VALUE (i.e. when you do a string concatenation temp variables are made)
@@ -660,13 +656,11 @@ struct _zend_op {
 #else
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data->Ts, &free_op1 TSRMLS_CC);
 #endif
-			php_printf("IS_TMP_VAR: OP1: %s", op1);
 			break;
 		// VARIABLE VALUE
 		case IS_VAR:
 			// CSAS_T(((n)->op1.var))
 			op1 = CSAS_T(CSAS_OP1_VAR(opline)).var.ptr;
-			php_printf("IS_VAR: OP1: %s", op1);
 			break;
 		case IS_CONST:
 			op1 = &(opline->op1.literal->constant);
@@ -681,33 +675,26 @@ struct _zend_op {
 						op1 = *t;
 					}
 				}
-				php_printf("IS_CV: OP1: %s", op1);
 		    }
 			break;
 	}
 
+
+	
 	// op1 at this point could be null but it represents an opcode
 	if (op1 != NULL) {
-		php_printf("<br>");
-		php_printf("OP1 is not Null, printing OP1");
-		php_printf("<br>");
-		char* s = cast_zval_to_string(op1);
-		if (s != NULL) {
-			php_printf("<br>");
-			php_printf("%s", s);
-			php_printf("<br>");
+		// convert op1 to a string if it is not already!
+		zval op1_copy;
+		int use_copy;
+		zend_make_printable_zval(op1, &op1_copy, &use_copy);
+		if (use_copy) {
+			op1 = &op1_copy;
 		}
+
+		char* s = cast_zval_to_string(op1);
+		php_printf("<br>OP1 = \"%s\"<br>\n", s);
 		// Now we check if op1 is a string, and if its possible for it to be csased
 		if (op1 && IS_STRING == Z_TYPE_P(op1) && PHP_CSAS_POSSIBLE(op1)) {
-			php_printf("<br>");
-			php_printf("OP1 is also possibly csased, printing OP1\n");
-			php_printf("<br>");
-			char* s = cast_zval_to_string(op1);
-			if (s != NULL) {
-				php_printf("<br>");
-				php_printf("%s", s);
-				php_printf("<br>");
-			}
 			// Here, ZEND_ECHO is the signature for the echo language construct. If the opcode associated with the opline handled in this function is an echo construct, then print out the appropriate error that you are trying to echo possibly csased output.
 // The other case is that it is a print construct.
 			if (ZEND_ECHO == opline->opcode) {
