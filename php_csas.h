@@ -192,6 +192,9 @@ typedef struct  _csas_free_op {
 	int   type;
 } csas_free_op;
 
+enum CsasContext { CSAS_UNUSED, CSAS_HTML, CSAS_JS, CSAS_CSS, CSAS_JSON,
+                           CSAS_XML, CSAS_MANUAL };
+
 PHP_MINIT_FUNCTION(csas);
 PHP_MSHUTDOWN_FUNCTION(csas);
 PHP_RINIT_FUNCTION(csas);
