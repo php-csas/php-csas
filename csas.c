@@ -44,7 +44,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_csas.h"
-#include "htmlparser/htmlparser.cc"
+#include "htmlparser/htmlparser.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
@@ -131,6 +131,26 @@ static struct csas_overridden_fucs /* {{{ */ {
 
 #define CSAS_O_FUNC(m) (csas_origin_funcs.m)
 /* }}} */
+
+enum CsasContext { CSAS_UNUSED, CSAS_HTML, CSAS_JS, CSAS_CSS, CSAS_JSON,
+                           CSAS_XML, CSAS_MANUAL }
+
+static htmlparser_ctx init_html_parser(bool in_tag, CsasContext cc) /* {{{ */ {
+    /* Call htmlparser_new() here */
+    /*switch (cc) {
+      case CSAS_JS:
+        htmlparser_->ResetMode(HtmlParser::MODE_JS);
+        break;
+      case CSAS_CSS:
+        htmlparser_->ResetMode(HtmlParser::MODE_CSS);
+        break;
+      default:
+        if (in_tag)
+          htmlparser_->ResetMode(HtmlParser::MODE_HTML_IN_TAG);
+        break;
+    }
+    return htmlparser_*/
+} /* }}} */
 
 static void php_csas_mark_strings(zval *symbol_table TSRMLS_DC) /* {{{ */ {
 	zval **ppzval;
