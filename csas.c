@@ -691,18 +691,32 @@ struct _zend_op {
 			op1 = &op1_copy;
 		}
 
-		char* s = cast_zval_to_string(op1);
-		php_printf("<br>OP1 = \"%s\"<br>\n", s);
+        // set up new string zval
+        zval op1_safe;
+
+        Z_TYPE(op1_safe) = IS_STRING;
+        Z_STRLEN(op1_safe) = 9;
+        Z_STRVAL(op1_safe) = estrndup("replaced!", Z_STRLEN(op1_safe));
+
+
+        if (CSAS_OP1_TYPE(opline) != IS_CONST) {
+            opline->op1.literal = emalloc(sizeof(zend_literal));
+        }
+
+        // set op1 to be a fake "constant" with our new zval
+        CSAS_OP1_TYPE(opline) = IS_CONST;
+        opline->op1.literal->constant = op1_safe;
+
+		//char* s = cast_zval_to_string(op1);
+		//php_printf("<br>OP1 = \"%s\"<br>\n", s);
 		// Now we check if op1 is a string, and if its possible for it to be csased
-		if (op1 && IS_STRING == Z_TYPE_P(op1) && PHP_CSAS_POSSIBLE(op1)) {
-			// Here, ZEND_ECHO is the signature for the echo language construct. If the opcode associated with the opline handled in this function is an echo construct, then print out the appropriate error that you are trying to echo possibly csased output.
-// The other case is that it is a print construct.
+		/*if (op1 && IS_STRING == Z_TYPE_P(op1) && PHP_CSAS_POSSIBLE(op1)) {
 			if (ZEND_ECHO == opline->opcode) {
 				php_csas_error("function.echo" TSRMLS_CC, "Attempt to echo a string that might be csased");
 			} else {
 				php_csas_error("function.print" TSRMLS_CC, "Attempt to print a string that might be csased");
 			}
-		}
+		}*/
 	}
 
 	return ZEND_USER_OPCODE_DISPATCH;
