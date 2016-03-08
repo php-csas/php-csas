@@ -35,7 +35,7 @@
 #ifndef SECURITY_STREAMHTMLPARSER_HTMLPARSER_H
 #define SECURITY_STREAMHTMLPARSER_HTMLPARSER_H
 
-//#include <config.h>
+#include <config.h>
 #include "statemachine.h"
 #include "jsparser.h"
 
