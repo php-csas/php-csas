@@ -134,7 +134,7 @@ static struct csas_overridden_fucs /* {{{ */ {
 
 typedef enum CsasContext CsasContext;
 
-static htmlparser_ctx *init_htmlparser(int in_tag, CsasContext cc) /* {{{ */ {
+static htmlparser_ctx *htmlparser_init(int in_tag, CsasContext cc) /* {{{ */ {
     htmlparser_ctx *htmlparser_ = htmlparser_new();
     switch (cc) {
       case CSAS_JS:
@@ -149,6 +149,16 @@ static htmlparser_ctx *init_htmlparser(int in_tag, CsasContext cc) /* {{{ */ {
         break;
     }
     return htmlparser_;
+} /* }}} */
+
+static int htmlparser_get_context(htmlparser_ctx *htmlparser_) /* {{{ */ {
+    int current_state = htmlparser_state(htmlparser_);
+    return current_state;
+} /* }}} */
+
+static int htmlparser_update_context(htmlparser_ctx *htmlparser_, const char *str, int size) /* {{{ */ {
+    int new_state = htmlparser_parse(htmlparser_, str, size);
+    return new_state;
 } /* }}} */
 
 static void php_csas_mark_strings(zval *symbol_table TSRMLS_DC) /* {{{ */ {
