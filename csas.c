@@ -134,6 +134,8 @@ static struct csas_overridden_fucs /* {{{ */ {
 
 typedef enum CsasContext CsasContext;
 
+htmlparser_ctx *htmlparser;
+
 static htmlparser_ctx *htmlparser_init(int in_tag, CsasContext cc) /* {{{ */ {
     htmlparser_ctx *htmlparser_ = htmlparser_new();
     switch (cc) {
@@ -658,31 +660,39 @@ char* cast_zval_to_string(zval *z) {
 	return Z_STRVAL_P(z);
 }
 
-// args are zend_execute_data *execute_data TSRMLS_DC
+char *get_parser_state_name(int ctx) {
+        switch(ctx) {
+            case HTMLPARSER_STATE_TEXT:
+                return "STATE_TEXT";
+            case HTMLPARSER_STATE_TAG:
+                return "STATE_TAG";
+            case HTMLPARSER_STATE_ATTR:
+                return "STATE_ATTR";
+            case HTMLPARSER_STATE_VALUE:
+                return "STATE_VALUE";
+            case HTMLPARSER_STATE_COMMENT:
+                return "STATE_COMMENT";
+            case HTMLPARSER_STATE_JS_FILE:
+                return "STATE_JS_FILE";
+            case HTMLPARSER_STATE_CSS_FILE:
+                return "STATE_CSS_FILE";
+            case HTMLPARSER_STATE_ERROR:
+                return "STATE_ERROR";
+            default:
+                return "UNKNOWN STATE";
+        }
+}
+
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
-	// defined in zend_compile.h, line 106
-/*
-struct _zend_op {
-        opcode_handler_t handler;
-        znode_op op1;
-        znode_op op2;
-        znode_op result;
-        ulong extended_value;
-        uint lineno;
-        zend_uchar opcode;
-        zend_uchar op1_type;
-        zend_uchar op2_type;
-        zend_uchar result_type;
-};
-*/
+    if (htmlparser == NULL) {
+        htmlparser = htmlparser_init(CSAS_UNUSED, 0);
+    }
 
 	zend_op *opline = execute_data->opline;
 	zval *op1 = NULL;
 	csas_free_op free_op1 = {0};
 
-	//  define CSAS_OP1_TYPE(n)         ((n)->op1_type)
 	switch(CSAS_OP1_TYPE(opline)) {
-		// TEMPORARY VALUE (i.e. when you do a string concatenation temp variables are made)
 		case IS_TMP_VAR:
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 5)
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data, &free_op1 TSRMLS_CC);
@@ -690,9 +700,7 @@ struct _zend_op {
 			op1 = php_csas_get_zval_ptr_tmp(CSAS_OP1_NODE_PTR(opline), execute_data->Ts, &free_op1 TSRMLS_CC);
 #endif
 			break;
-		// VARIABLE VALUE
 		case IS_VAR:
-			// CSAS_T(((n)->op1.var))
 			op1 = CSAS_T(CSAS_OP1_VAR(opline)).var.ptr;
 			break;
 		case IS_CONST:
@@ -714,7 +722,7 @@ struct _zend_op {
 
 
 	
-	// op1 at this point could be null but it represents an opcode
+	// op1 at this point should not be null
 	if (op1 != NULL) {
 		// convert op1 to a string if it is not already!
 		zval op1_copy;
@@ -724,7 +732,11 @@ struct _zend_op {
 			op1 = &op1_copy;
 		}
 
-        // set up new string zval
+        int ctx = html_parser_get_context(htmlparser);
+
+        php_printf("About to echo in context: %s<br>\n", get_parser_state_name(ctx));
+
+        // set up new string zval (for modifying value that gets printed)
         zval op1_safe;
 
         Z_TYPE(op1_safe) = IS_STRING;
@@ -740,7 +752,6 @@ struct _zend_op {
         CSAS_OP1_TYPE(opline) = IS_CONST;
         opline->op1.literal->constant = op1_safe;
 
-		//char* s = cast_zval_to_string(op1);
 		//php_printf("<br>OP1 = \"%s\"<br>\n", s);
 		// Now we check if op1 is a string, and if its possible for it to be csased
 		/*if (op1 && IS_STRING == Z_TYPE_P(op1) && PHP_CSAS_POSSIBLE(op1)) {
@@ -750,6 +761,11 @@ struct _zend_op {
 				php_csas_error("function.print" TSRMLS_CC, "Attempt to print a string that might be csased");
 			}
 		}*/
+
+        // at this point op1 can be safely gotten as a string
+		char* s = cast_zval_to_string(op1);
+
+        htmlparser_update_context(htmlparser, s, strlen(s));
 	}
 
 	return ZEND_USER_OPCODE_DISPATCH;
