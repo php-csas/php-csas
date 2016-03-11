@@ -683,6 +683,12 @@ char *get_parser_state_name(int ctx) {
         }
 }
 
+
+static char *sanitize_for_context(char *s, int tag, int ctx, int *len) {
+    *len = strlen(s);
+    return s;
+}
+
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     if (htmlparser == NULL) {
         htmlparser = htmlparser_init(CSAS_UNUSED, 0);
@@ -732,16 +738,22 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 			op1 = &op1_copy;
 		}
 
-        int ctx = html_parser_get_context(htmlparser);
+        // the string value of the output
+		char* s = cast_zval_to_string(op1);
+
+        int ctx = htmlparser_get_context(htmlparser);
 
         php_printf("About to echo in context: %s<br>\n", get_parser_state_name(ctx));
 
-        // set up new string zval (for modifying value that gets printed)
+
         zval op1_safe;
+        int len;
+
+        char *s_safe = sanitize_for_context(s, 0, ctx, &len);
 
         Z_TYPE(op1_safe) = IS_STRING;
-        Z_STRLEN(op1_safe) = 9;
-        Z_STRVAL(op1_safe) = estrndup("replaced!", Z_STRLEN(op1_safe));
+        Z_STRLEN(op1_safe) = len;
+        Z_STRVAL(op1_safe) = s_safe;
 
 
         if (CSAS_OP1_TYPE(opline) != IS_CONST) {
@@ -763,9 +775,8 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 		}*/
 
         // at this point op1 can be safely gotten as a string
-		char* s = cast_zval_to_string(op1);
 
-        htmlparser_update_context(htmlparser, s, strlen(s));
+        htmlparser_update_context(htmlparser, s_safe, len);
 	}
 
 	return ZEND_USER_OPCODE_DISPATCH;
