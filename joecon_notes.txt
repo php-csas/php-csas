@@ -1,24 +1,11 @@
-Important problems to solve:
 
-1) Get string representation of arbitrary zvals (not just strings), as they will be printed out
+- Allow strings to be marked as safe for certain contexts
+    - Marking is currently done by storing taint flag (unsigned int) in memory immediately after the string value of zvals
+
+- Get string representation of arbitrary zvals (not just strings), as they will be printed out
 	- DONE
-	- this is the value we will use to update HTML parser and sanitize
-	- solution: function zend_make_printable_zval (defined in zend.c)
-		- requires allocating a new zval
-		- figure out how to allocate a zval - turns out it's really easy, just use a stack-allocated zval
 
-2) Determine best method for modifying zval before it is echo'd
-    - PoC DONE
-        - Only issue is memory leaks
-	- probably want to allocate new **STRING** zval (regardless of original object type) and set its value
-	- PHP engine has some unusual memory allocation functions (see https://secure.php.net/manual/en/internals2.memory.management.php)
-	- need to ensure we don't overwrite original zval
-	- format of znode_op may make this difficult:
-		- defined in zend_compile.h
-		- holds one of several types of variables (var, compiled var, constant, tmp var)
-		- method of getting variable depends on type
-		- probably will want to use "constant": this allows us to pass a literal zval
-		- remember to set op1_type if we patch as fake constant
-    - Possible alternative solution: instead of returning DISPATCH, return CONTINUE and handle the printing ourselves!
+- Determine best method for modifying zval before it is echo'd
+    - Done, but need to fix memory leaks
 
 
