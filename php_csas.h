@@ -50,9 +50,15 @@ extern zend_module_entry csas_module_entry;
 #define PHP_CSAS_VERSION "1.3.0-dev"
 
 #define PHP_CSAS_MAGIC_LENGTH   sizeof(unsigned)
-#define PHP_CSAS_MAGIC_NONE     0x00000000
-#define PHP_CSAS_MAGIC_POSSIBLE 0x6A8FCE84
-#define PHP_CSAS_MAGIC_UNCSAS  0x2C5E7F2D
+#define PHP_CSAS_MAGIC_UNSAFE            0
+#define PHP_CSAS_MAGIC_SAFE_PCDATA       (1 << 1)
+#define PHP_CSAS_MAGIC_SAFE_ATTR_QUOT    (1 << 2)
+#define PHP_CSAS_MAGIC_SAFE_ATTR_UNQUOT  (1 << 3)
+#define PHP_CSAS_MAGIC_SAFE_URL_START    (1 << 4)
+#define PHP_CSAS_MAGIC_SAFE_URL_QUERY    (1 << 5)
+#define PHP_CSAS_MAGIC_SAFE_URL_GENERAL  (1 << 6)
+#define PHP_CSAS_MAGIC_SAFE_JS_STRING    (1 << 7)
+#define PHP_CSAS_MAGIC_SAFE_ALL          0xFFFFFFFF
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4) 
 #  define CSAS_OP1_TYPE(n)         ((n)->op1.op_type)
@@ -76,7 +82,7 @@ extern zend_module_entry csas_module_entry;
 #  define CSAS_OP1_NODE_PTR(n)     ((n)->op1.var)
 #  define CSAS_OP2_NODE_PTR(n)     ((n)->op2.var)
 #  define CSAS_OP1_VAR(n)          ((n)->op1.var)
-#  define CSAS_OP2_VAR(n)          ((n)->op2.var)
+#  define CSAS_OP4_VAR(n)          ((n)->op2.var)
 #  define CSAS_RESULT_VAR(n)       ((n)->result.var)
 #  define CSAS_OP1_CONSTANT_PTR(n) ((n)->op1.zv)
 #  define CSAS_OP2_CONSTANT_PTR(n) ((n)->op2.zv)
@@ -174,8 +180,10 @@ extern zend_module_entry csas_module_entry;
 	}
 
 #define PHP_CSAS_MARK(zv, mark) *((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1)) = (mark)
-#define PHP_CSAS_POSSIBLE(zv) (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_POSSIBLE)
-#define PHP_CSAS_UNCSAS(zv)  (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_UNCSAS)
+#define PHP_CSAS_CHECK(zv, ctx) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))) & (ctx))
+#define PHP_CSAS_GET_SAFETY(zv) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))))
+//#define PHP_CSAS_POSSIBLE(zv) (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_POSSIBLE)
+//#define PHP_CSAS_UNCSAS(zv)  (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_UNCSAS)
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 3))
 #  define Z_ADDREF_P   ZVAL_ADDREF
