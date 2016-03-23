@@ -179,8 +179,8 @@ extern zend_module_entry csas_module_entry;
 		zval_ptr_dtor(&should_free.var); \
 	}
 
-#define PHP_CSAS_MARK(zv, mark) *((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1)) = (mark)
-#define PHP_CSAS_CHECK(zv, ctx) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))) & (ctx))
+#define PHP_CSAS_SET_SAFETY(zv, mark) *((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1)) = (mark)
+#define PHP_CSAS_IS_SAFE_FOR(zv, ctx) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))) & (ctx))
 #define PHP_CSAS_GET_SAFETY(zv) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))))
 //#define PHP_CSAS_POSSIBLE(zv) (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_POSSIBLE)
 //#define PHP_CSAS_UNCSAS(zv)  (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_UNCSAS)
