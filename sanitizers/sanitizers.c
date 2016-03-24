@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char kCodeLengths[256] = {
+static const char k_code_lengths[256] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -24,11 +24,11 @@ static const char kCodeLengths[256] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
-static inline uint16 UTF8CodeUnit(const char** start, const char *end) {
-  // Use kCodeLengths table to calculate the length of the code unit
+static inline uint16 utf8_code_unit(const char** start, const char *end) {
+  // Use k_code_lengths table to calculate the length of the code unit
   // from the first character.
   unsigned char first_char = static_cast<unsigned char>(**start);
-  size_t code_unit_len = kCodeLengths[first_char];
+  size_t code_unit_len = k_code_lengths[first_char];
   if (code_unit_len == 1) {
     // Return the current byte as a codepoint.
     // Either it is a valid single byte codepoint, or it's not part of a valid
@@ -103,7 +103,7 @@ char* pre_escape_sanitize(const char* op1, int len)
       case '>':  j+=4; break;
     }
   }
-  buf = (char*)malloc(sizeof(char)*j+1);
+  buf = (char*) malloc(sizeof(char)*j+1);
   for (i = 0; i < j+1; i++){
     buf[i] = '\0';
   }
@@ -209,7 +209,8 @@ void javascript_escape_sanitize(const char* op1, int len)
   return buf;
 }
 
-static inline bool IsUrlQueryEscapeSafeChar(unsigned char c) {
+static inline bool
+is_url_query_escape_safe_char(unsigned char c) {
   // Everything not matching [0-9a-zA-Z.,_*/~!()-] is escaped.
   static unsigned long _safe_characters[8] = {
     0x00000000L, 0x03fff702L, 0x87fffffeL, 0x47fffffeL,
@@ -222,12 +223,11 @@ void url_query_escape_sanitize(const char* op1, int len,
 {
   char* pos = op1;
   char* limit = op1 + len;
+  //calc sizes for safe characters
   while (true) {
-    //calc sizes for safe characters
-    while (true) {
     // Peel off any initial runs of safe characters and emit them all
     // at once.
-    while (pos < limit && IsUrlQueryEscapeSafeChar(*pos)) {
+    while (pos < limit && is_url_query_escape_safe_char(*pos)) {
       pos++;
       j++;
     }
@@ -235,16 +235,16 @@ void url_query_escape_sanitize(const char* op1, int len,
     if (pos < limit) {
       unsigned char c = *pos;
       if (c == ' ')  j++;
-      else {
-        j+=3;
-      }
+      else j+=3;
       pos++;
     } else {
       // We're done!
       break;
     }
   }
-    while (pos < limit && IsUrlQueryEscapeSafeChar(*pos)) {
+  buf = (char*) malloc(j+1);
+  while (true){
+    while (pos < limit && is_url_query_escape_safe_char(*pos)) {
       buf[j] = *pos;
       pos++;
       j++;
@@ -277,4 +277,6 @@ void url_query_escape_sanitize(const char* op1, int len,
       break;
     }
   }
+  buf[j] = '\0';
+  return buf;
 }
