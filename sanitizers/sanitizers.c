@@ -208,3 +208,73 @@ void javascript_escape_sanitize(const char* op1, int len)
   buf[j] = '\0';
   return buf;
 }
+
+static inline bool IsUrlQueryEscapeSafeChar(unsigned char c) {
+  // Everything not matching [0-9a-zA-Z.,_*/~!()-] is escaped.
+  static unsigned long _safe_characters[8] = {
+    0x00000000L, 0x03fff702L, 0x87fffffeL, 0x47fffffeL,
+    0x00000000L, 0x00000000L, 0x00000000L, 0x00000000L
+  };
+  return (_safe_characters[(c)>>5] & (1 << ((c) & 31)));
+}
+
+void url_query_escape_sanitize(const char* op1, int len,
+{
+  char* pos = op1;
+  char* limit = op1 + len;
+  while (true) {
+    //calc sizes for safe characters
+    while (true) {
+    // Peel off any initial runs of safe characters and emit them all
+    // at once.
+    while (pos < limit && IsUrlQueryEscapeSafeChar(*pos)) {
+      pos++;
+      j++;
+    }
+    // Sizes for unsafe characters
+    if (pos < limit) {
+      unsigned char c = *pos;
+      if (c == ' ')  j++;
+      else {
+        j+=3;
+      }
+      pos++;
+    } else {
+      // We're done!
+      break;
+    }
+  }
+    while (pos < limit && IsUrlQueryEscapeSafeChar(*pos)) {
+      buf[j] = *pos;
+      pos++;
+      j++;
+    }
+    // Now deal with a single unsafe character.
+    if (pos < limit) {
+      unsigned char c = *pos;
+      if (c == ' ') {
+        out->Emit('+');
+        j++;
+      } else {
+        buf[j] = '%';
+        j++;
+        if((c>>4) < 10){
+          buf[j] = (c>>4)+'0';
+        }else{
+          buf[j] = ((c>>4) - 10) + 'A';
+        }
+        j++;
+        if((c&0xf) < 10){
+          buf[j] = (c&0xf) + '0';
+        }else{
+          buf[j] = ((c&0xf) - 10) + 'A';
+        }
+        j++;
+      }
+      pos++;
+    } else {
+      // We're done!
+      break;
+    }
+  }
+}
