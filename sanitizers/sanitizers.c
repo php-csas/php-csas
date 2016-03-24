@@ -219,7 +219,7 @@ is_url_query_escape_safe_char(unsigned char c) {
   return (_safe_characters[(c)>>5] & (1 << ((c) & 31)));
 }
 
-void url_query_escape_sanitize(const char* op1, int len,
+char* url_query_escape_sanitize(const char* op1, int len,
 {
   char* pos = op1;
   char* limit = op1 + len;
@@ -278,5 +278,17 @@ void url_query_escape_sanitize(const char* op1, int len,
     }
   }
   buf[j] = '\0';
+  return buf;
+}
+
+char *url_start_sanitize(char* op1, int len){
+  int i, j;
+  char buf = op1;
+  return buf;
+}
+
+char *url_general_sanitize(char* op1, int len){
+  int i, j;
+  char buf = op1;
   return buf;
 }
