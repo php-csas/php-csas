@@ -283,12 +283,56 @@ char* url_query_escape_sanitize(const char* op1, int len,
 
 char *url_start_sanitize(char* op1, int len){
   int i, j;
-  char buf = op1;
+  char *buf
+  char *colon;
+  /*check to see if valid protocol (http, https, mailto)*/
+  if (len >=8  && strncmp(op1, "https://", 8) == 0) return op1;
+  if (len >= 7 && strncmp(op1, "http://", 7) == 0) return op1;
+  if (len >= 6 && strncmp(op1, "mailto:", 6) == 0) return op1;
+  /*remove if not a whitelisted protocol*/
+  /*find first colon*/
+  colon = strchr(op1, ':');
+  if (colon == NULL) return "";
+  while (*colon == ':' || *colon == '/'){
+    if (colon >= op1 + len) return "";
+    colon++;
+  }
+  i =len- (op1 - colon); /*find length of non-protocol section*/
+  buf = (char*) malloc(i);
+  strncpy(buf,colon, i);
   return buf;
 }
 
 char *url_general_sanitize(char* op1, int len){
+  char *buf;
   int i, j;
-  char buf = op1;
+  for (i = 0; i < len; i++){
+    switch (op1[i]){
+      default: j++; break;
+      case '&': j+=4; break;
+      case '"': j+=6; break;
+      case '\'': j+=5; break;
+      case '<': j+=4; break;
+      case '>':  j+=4; break;
+      case '\r': case '\n': case '\v': case '\f': case '\t': j++; break;
+    }
+  }
+  buf = (char*)malloc(sizeof(char)*j+1);
+  for (i = 0; i < j+1; i++){
+    buf[i] = '\0';
+  }
+  j = 0;
+  for (i = 0; i < len; i++){
+    switch (op1[i]){
+      default: buf[j] = op1[i]; j++; break;
+      case '&': strcpy(buf+j,"&amp"); j+=4; break;
+      case '"': strcpy(buf+j,"&quote"); j+=6; break;
+      case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '<': strcpy(buf+j, "&lt;"); j+=4; break;
+      case '>': strcpy(buf+j,"&gt;"); j+=4; break;
+      case '\r': case '\n': case '\v': case '\f': case '\t': buf[j] = ' '; j++; break;
+    }
+  }
+  buf[j] = '\0';
   return buf;
 }
