@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+
+typedef int bool;
+enum { false, true };
 
 static const char k_code_lengths[256] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -24,10 +28,10 @@ static const char k_code_lengths[256] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
-static inline uint16 utf8_code_unit(const char** start, const char *end) {
+static inline uint16_t utf8_code_unit(const char** start, const char *end) {
   // Use k_code_lengths table to calculate the length of the code unit
   // from the first character.
-  unsigned char first_char = static_cast<unsigned char>(**start);
+  unsigned char first_char = (unsigned char)(**start);
   size_t code_unit_len = k_code_lengths[first_char];
   if (code_unit_len == 1) {
     // Return the current byte as a codepoint.
@@ -42,9 +46,9 @@ static inline uint16 utf8_code_unit(const char** start, const char *end) {
     return 0xFFFDU;
   }
   const char* pos = *start;
-  uint16 code_unit = *pos & (0xFFU >> code_unit_len);
+  uint16_t code_unit = *pos & (0xFFU >> code_unit_len);
   while (--code_unit_len) {
-    uint16 tail_byte = *(++pos);
+    uint16_t tail_byte = *(++pos);
     if ((tail_byte & 0xC0U) != 0x80U) {  // Malformed code unit.
       ++*start;
       return 0xFFFDU;
@@ -122,17 +126,17 @@ char* pre_escape_sanitize(const char* op1, int len)
   return buf;
 }
 
-void javascript_escape_sanitize(const char* op1, int len)
+char* javascript_escape_sanitize(const char* op1, int len)
 {
+  int j = 0;
   char* buf;
-  char* pos = op1;
-  char* limit = op1 + len;
-
   const char* pos = op1;
-  const char* const limit = op1 + len
+  const char* const limit = op1 + len;
 
+  /*Calculate length of new string*/
   while (pos < limit) {
     const char* next_pos = pos;
+    uint16_t code_unit = utf8_code_unit(&next_pos, limit);
     if (code_unit & 0xFF00) {
       if (code_unit == 0x2028) {
         j+=6;
@@ -145,36 +149,39 @@ void javascript_escape_sanitize(const char* op1, int len)
     } else {
       switch (code_unit) {
         default: j+=next_pos-pos; break;
-        case '\0': strcpy(buf+j, "\\x00"); j+=4; break;
-        case '"':  strcpy(buf+j, "\\x22"); j+=4; break;
-        case '\'': strcpy(buf+j, "\\x27"); j+=4; break;
-        case '\\': strcpy(buf+j, "\\\\"); j+=2; break;
-        case '\t': strcpy(buf+j, "\\t"); j+=2;  break;
-        case '\r': strcpy(buf+j, "\\r"); j+=2;  break;
-        case '\n': strcpy(buf+j, "\\n"); j+=2;  break;
-        case '\b': strcpy(buf+j,"\\b");  j+=2; break;
-        case '\f': strcpy(buf+j, "\\f"); j+=2; break;
-        case '&':  strcpy(buf+j, "\\x26"); j+=4; break;
-        case '<':  strcpy(buf+j, "\\x3c"); j+=4; break;
-        case '>':  strcpy(buf+j, "\\x3e"); j+=4; break;
-        case '=':  strcpy(buf+j, "\\x3d"); break;
-        case '\v': strcpy(buf+j, "\\x0b"); j+= 4 break;
+        case '\0': j+=4; break;
+        case '"': j+=4; break;
+        case '\'': j+=4; break;
+        case '\\': j+=2; break;
+        case '\t': j+=2;  break;
+        case '\r': j+=2;  break;
+        case '\n': j+=2;  break;
+        case '\b': j+=2; break;
+        case '\f': j+=2; break;
+        case '&':  j+=4; break;
+        case '<':  j+=4; break;
+        case '>':  j+=4; break;
+        case '=':  j+=4; break;
+        case '\v': j+=4; break;
       }
     }
     pos = next_pos;
   }
-  pos = ob1;
+
+  /*Fill in new string*/
+  pos = op1;
   buf = (char*) malloc(j+1);
   while (pos < limit) {
     const char* next_pos = pos;
+    uint16_t code_unit = utf8_code_unit(&next_pos, limit);
     if (code_unit & 0xFF00) {
-      // Linebreaks according to EcmaScript 262 which cannot appear in strings.
+      /*Linebreaks according to EcmaScript 262 which cannot appear in strings.*/
       if (code_unit == 0x2028) {
-        // Line separator
+        /*Line separator*/
         strcpy(buf+j, "\\u2028");
         j+=6;
       } else if (code_unit == 0x2029) {
-        // Paragraph separator
+        /*Paragraph separator*/
         strcpy(buf+j, "\\u2029");
         j+=6;
       } else {
@@ -199,8 +206,8 @@ void javascript_escape_sanitize(const char* op1, int len)
         case '&':  strcpy(buf+j, "\\x26"); j+=4; break;
         case '<':  strcpy(buf+j, "\\x3c"); j+=4; break;
         case '>':  strcpy(buf+j, "\\x3e"); j+=4; break;
-        case '=':  strcpy(buf+j, "\\x3d"); break;
-        case '\v': strcpy(buf+j, "\\x0b"); j+= 4 break;
+        case '=':  strcpy(buf+j, "\\x3d"); j+=4; break;
+        case '\v': strcpy(buf+j, "\\x0b"); j+=4; break;
       }
     }
     pos = next_pos;
@@ -211,7 +218,7 @@ void javascript_escape_sanitize(const char* op1, int len)
 
 static inline bool
 is_url_query_escape_safe_char(unsigned char c) {
-  // Everything not matching [0-9a-zA-Z.,_*/~!()-] is escaped.
+  /*Everything not matching [0-9a-zA-Z.,_~!()-] is escaped.*/
   static unsigned long _safe_characters[8] = {
     0x00000000L, 0x03fff702L, 0x87fffffeL, 0x47fffffeL,
     0x00000000L, 0x00000000L, 0x00000000L, 0x00000000L
@@ -219,26 +226,29 @@ is_url_query_escape_safe_char(unsigned char c) {
   return (_safe_characters[(c)>>5] & (1 << ((c) & 31)));
 }
 
-char* url_query_escape_sanitize(const char* op1, int len,
+char* url_query_escape_sanitize(const char* op1, int len)
 {
-  char* pos = op1;
-  char* limit = op1 + len;
-  //calc sizes for safe characters
+  int j = 0;
+  char* buf;
+  const char* pos = op1;
+  const char* limit = op1 + len;
+
+  /*calc sizes for safe characters*/
   while (true) {
-    // Peel off any initial runs of safe characters and emit them all
-    // at once.
-    while (pos < limit && is_url_query_escape_safe_char(*pos)) {
+    /*Peel off any initial runs of safe characters and emit them all
+    at once.*/
+      while (pos < limit && is_url_query_escape_safe_char(*pos)) {
       pos++;
       j++;
     }
-    // Sizes for unsafe characters
+    /*Sizes for unsafe characters*/
     if (pos < limit) {
       unsigned char c = *pos;
       if (c == ' ')  j++;
       else j+=3;
       pos++;
     } else {
-      // We're done!
+      /*We're done!*/
       break;
     }
   }
@@ -253,7 +263,7 @@ char* url_query_escape_sanitize(const char* op1, int len,
     if (pos < limit) {
       unsigned char c = *pos;
       if (c == ' ') {
-        out->Emit('+');
+        buf[j] = '+';
         j++;
       } else {
         buf[j] = '%';
@@ -283,7 +293,7 @@ char* url_query_escape_sanitize(const char* op1, int len,
 
 char *url_start_sanitize(char* op1, int len){
   int i, j;
-  char *buf
+  char *buf;
   char *colon;
   /*check to see if valid protocol (http, https, mailto)*/
   if (len >=8  && strncmp(op1, "https://", 8) == 0) return op1;
@@ -335,4 +345,7 @@ char *url_general_sanitize(char* op1, int len){
   }
   buf[j] = '\0';
   return buf;
+}
+
+main(int argc, char **argv){
 }
