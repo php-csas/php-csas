@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "sanitizers.h"
 
 typedef int bool;
 enum { false, true };
@@ -65,8 +66,8 @@ char* html_escape_sanitize(const char* op1, int len){
   for (i = 0; i < len; i++){
     switch (op1[i]){
       default: j++; break;
-      case '&': j+=4; break;
-      case '"': j+=6; break;
+      case '&': j+=5; break;
+      case '"': j+=7; break;
       case '\'': j+=5; break;
       case '<': j+=4; break;
       case '>':  j+=4; break;
@@ -81,8 +82,8 @@ char* html_escape_sanitize(const char* op1, int len){
   for (i = 0; i < len; i++){
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
-      case '&': strcpy(buf+j,"&amp"); j+=4; break;
-      case '"': strcpy(buf+j,"&quote"); j+=6; break;
+      case '&': strcpy(buf+j,"&amp;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
       case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
@@ -100,8 +101,8 @@ char* pre_escape_sanitize(const char* op1, int len)
   for (i = 0; i < len; i++){
     switch (op1[i]){
       default: j++; break;
-      case '&': j+=4; break;
-      case '"': j+=6; break;
+      case '&': j+=5; break;
+      case '"': j+=7; break;
       case '\'': j+=5; break;
       case '<': j+=4; break;
       case '>':  j+=4; break;
@@ -115,8 +116,8 @@ char* pre_escape_sanitize(const char* op1, int len)
   for (i = 0; i < len; i++){
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
-      case '&': strcpy(buf+j,"&amp"); j+=4; break;
-      case '"': strcpy(buf+j,"&quote"); j+=6; break;
+      case '&': strcpy(buf+j,"&amp;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
       case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
@@ -291,8 +292,8 @@ char* url_query_escape_sanitize(const char* op1, int len)
   return buf;
 }
 
-char *url_start_sanitize(char* op1, int len){
-  int i, j;
+char *url_start_sanitize(const char* op1, int len){
+  int i;
   char *buf;
   char *colon;
   /*check to see if valid protocol (http, https, mailto)*/
@@ -307,20 +308,21 @@ char *url_start_sanitize(char* op1, int len){
     if (colon >= op1 + len) return "";
     colon++;
   }
-  i =len- (op1 - colon); /*find length of non-protocol section*/
+  i =len-(op1 - colon); /*find length of non-protocol section*/
   buf = (char*) malloc(i);
+  /*remove protocol section from tainted string*/
   strncpy(buf,colon, i);
   return buf;
 }
 
-char *url_general_sanitize(char* op1, int len){
+char *url_general_sanitize(const char* op1, int len){
   char *buf;
   int i, j;
   for (i = 0; i < len; i++){
     switch (op1[i]){
       default: j++; break;
-      case '&': j+=4; break;
-      case '"': j+=6; break;
+      case '&': j+=5; break;
+      case '"': j+=7; break;
       case '\'': j+=5; break;
       case '<': j+=4; break;
       case '>':  j+=4; break;
@@ -335,8 +337,8 @@ char *url_general_sanitize(char* op1, int len){
   for (i = 0; i < len; i++){
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
-      case '&': strcpy(buf+j,"&amp"); j+=4; break;
-      case '"': strcpy(buf+j,"&quote"); j+=6; break;
+      case '&': strcpy(buf+j,"&amp;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
       case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
@@ -345,7 +347,4 @@ char *url_general_sanitize(char* op1, int len){
   }
   buf[j] = '\0';
   return buf;
-}
-
-main(int argc, char **argv){
 }
