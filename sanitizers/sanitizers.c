@@ -318,7 +318,11 @@ char *url_start_sanitize(const char* op1, int len){
 char *url_general_sanitize(const char* op1, int len){
   char *buf;
   int i, j;
+
   for (i = 0; i < len; i++){
+    /*filter out non-safe url characters*/
+    if (op1[i] < 33 || op1[i]>126) continue;
+    /*filter out potential html*/
     switch (op1[i]){
       default: j++; break;
       case '&': j+=5; break;
@@ -335,6 +339,9 @@ char *url_general_sanitize(const char* op1, int len){
   }
   j = 0;
   for (i = 0; i < len; i++){
+    /*filter out unsafe uri characters*/
+    if (op1[i] < 33 || op1[i]>126) continue;
+    /*filter out potential html*/
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
