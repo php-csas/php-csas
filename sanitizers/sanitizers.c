@@ -318,7 +318,6 @@ char *url_start_sanitize(const char* op1, int len){
 char *url_general_sanitize(const char* op1, int len){
   char *buf;
   int i, j;
-
   for (i = 0; i < len; i++){
     /*filter out non-safe url characters*/
     if (op1[i] < 33 || op1[i]>126) continue;
@@ -330,7 +329,6 @@ char *url_general_sanitize(const char* op1, int len){
       case '\'': j+=5; break;
       case '<': j+=4; break;
       case '>':  j+=4; break;
-      case '\r': case '\n': case '\v': case '\f': case '\t': j++; break;
     }
   }
   buf = (char*)malloc(sizeof(char)*j+1);
@@ -349,7 +347,6 @@ char *url_general_sanitize(const char* op1, int len){
       case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
-      case '\r': case '\n': case '\v': case '\f': case '\t': buf[j] = ' '; j++; break;
     }
   }
   buf[j] = '\0';
