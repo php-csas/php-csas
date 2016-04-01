@@ -730,9 +730,13 @@ char *get_safety_name(uint safety) {
         }
 }
 
+/* attempts to determine what sanitizer is needed given the current context 
+
+   SAFE_ALL means there is no sanitizer than can guarantee safety here (i.e, the required safety level
+   is that the value is directly from the programmer)
+ */
 static int get_safety_needed() {
     int ctx = htmlparser_get_context(htmlparser);
-    //php_csas_error("function.echo" TSRMLS_CC, "Attempt to echo a string that might be csased");
 
     if (htmlparser_in_js(htmlparser) && ctx != HTMLPARSER_STATE_VALUE) {
         if (htmlparser_is_js_quoted(htmlparser)) {
@@ -748,6 +752,7 @@ static int get_safety_needed() {
 static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
     switch(ctx) {
         case HTMLPARSER_STATE_VALUE:
+            // we are inside an attribute value.. check what type of attribute
             switch (htmlparser_attr_type(htmlparser)) {
                 case HTMLPARSER_ATTR_URI:
                     if (htmlparser_is_attr_quoted(htmlparser)) {
