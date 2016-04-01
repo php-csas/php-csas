@@ -760,7 +760,7 @@ static int get_safety_needed() {
                     }
                     else {
                         if (htmlparser_is_url_start(htmlparser)) {
-                            php_csas_error("function.echo", NULL, "could not reliably sanitize");
+                            php_printf("ERROR: can't sanitize unquoted url start");
                             return PHP_CSAS_SAFE_ALL;
                         }
                         return PHP_CSAS_SAFE_URL_QUERY;
@@ -774,7 +774,7 @@ static int get_safety_needed() {
                     }
                     return PHP_CSAS_SAFE_ATTR_UNQUOT;
                 default:
-                    php_csas_error("function.echo", NULL, "html parsing error: unknown attr"); 
+                    php_printf("ERROR: unknown attr");
                     return PHP_CSAS_SAFE_ALL;
             }
             break;
@@ -786,7 +786,7 @@ static int get_safety_needed() {
             // TODO: add additional proper sanitizers for these (not in scope of project)
             return PHP_CSAS_SAFE_PCDATA;
         default:
-            php_csas_error("function.echo", NULL, "html parsing error: unknown state");
+            php_printf("ERROR: unknown state");
             return PHP_CSAS_SAFE_ALL;
     }
 }
@@ -835,7 +835,7 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
                 return javascript_escape_sanitize(s, len);
     }
 
-    php_csas_error("function.echo", NULL, "no sanitizer available");
+    php_printf("ERROR: no sanitizer available");
     *len=0;
     return "";
 }
@@ -3354,6 +3354,7 @@ PHP_MSHUTDOWN_FUNCTION(csas)
  */
 PHP_RINIT_FUNCTION(csas)
 {
+    htmlparser = NULL;
     if (SG(sapi_started) || !CSAS_G(enable)) {
         return SUCCESS;
     }
