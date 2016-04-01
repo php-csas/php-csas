@@ -1,8 +1,8 @@
-Warning: main(): Attempt to echo a string that might be tainted in %s005.php on line %d
-tainted string.
-Warning: main(): Attempt to print a string that might be tainted in %s005.php on line %d
-tainted string.
-Warning: main(): Attempt to echo a string that might be tainted in %s005.php on line %d
-tainted string.
-Warning: main(): Attempt to print a string that might be tainted in %s005.php on line %d
-tainted string.
+Warning: main(): Attempt to echo a string that might be csased in %s005.php on line %d
+csased string.
+Warning: main(): Attempt to print a string that might be csased in %s005.php on line %d
+csased string.
+Warning: main(): Attempt to echo a string that might be csased in %s005.php on line %d
+csased string.
+Warning: main(): Attempt to print a string that might be csased in %s005.php on line %d
+csased string.

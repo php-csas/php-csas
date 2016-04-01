@@ -1,5 +1,5 @@
-002+ /home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/taint.so: undefined symbol: print
+002+ /home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/csas.so: undefined symbol: print
 002- 
-003- Warning: main(): Attempt to echo a string that might be tainted in %sbug61816.php on line %d
-004- tainted string.
+003- Warning: main(): Attempt to echo a string that might be csased in %sbug61816.php on line %d
+004- csased string.
 005- bool(true)

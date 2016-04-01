@@ -1,9 +1,9 @@
 --TEST--
 ISSUE #4 (wrong op fetched)
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
-taint.enable=1
+csas.enable=1
 report_memleaks=0
 --FILE--
 <?php
@@ -13,7 +13,7 @@ function dummy(&$a) {
 }
 
 $c = "xxx". "xxx";
-taint($c);
+csas($c);
 dummy($c);
 var_dump($c);
 ?>
