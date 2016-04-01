@@ -94,7 +94,7 @@ static inline uint16_t utf8_code_unit(const char** start, const char *end) {
   return code_unit;
 }
 
-char* html_escape_sanitize(const char* op1, int len){
+char* html_escape_sanitize(const char* op1, int *len){
   char *buf;
   int i, j;
   for (i = 0; i < len; i++){
@@ -125,15 +125,15 @@ char* html_escape_sanitize(const char* op1, int len){
     }
   }
   buf[j] = '\0';
-  len = j;
+  *len = j;
   return buf;
 }
 
-char* pre_escape_sanitize(const char* op1, int len)
+char* pre_escape_sanitize(const char* op1, int *len)
 {
   char *buf;
   int i, j;
-  for (i = 0; i < len; i++){
+  for (i = 0; i < *len; i++){
     switch (op1[i]){
       default: j++; break;
       case '&': j+=5; break;
@@ -148,7 +148,7 @@ char* pre_escape_sanitize(const char* op1, int len)
     buf[i] = '\0';
   }
   j = 0;
-  for (i = 0; i < len; i++){
+  for (i = 0; i < *len; i++){
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
@@ -159,16 +159,16 @@ char* pre_escape_sanitize(const char* op1, int len)
     }
   }
   buf[j] = '\0';
-  len = j;
+  *len = j;
   return buf;
 }
 
-char* javascript_escape_sanitize(const char* op1, int len)
+char* javascript_escape_sanitize(const char* op1, int *len)
 {
   int j = 0;
   char* buf;
   const char* pos = op1;
-  const char* const limit = op1 + len;
+  const char* const limit = op1 + *len;
 
   /*Calculate length of new string*/
   while (pos < limit) {
@@ -249,7 +249,7 @@ char* javascript_escape_sanitize(const char* op1, int len)
     }
     pos = next_pos;
   }
-  len = j;
+  *len = j;
   buf[j] = '\0';
   return buf;
 }
@@ -264,7 +264,7 @@ is_url_query_escape_safe_char(unsigned char c) {
   return (_safe_characters[(c)>>5] & (1 << ((c) & 31)));
 }
 
-char* url_query_escape_sanitize(const char* op1, int len)
+char* url_query_escape_sanitize(const char* op1, int *len)
 {
   int j = 0;
   char* buf;
@@ -325,12 +325,12 @@ char* url_query_escape_sanitize(const char* op1, int len)
       break;
     }
   }
-  len = j;
+  *len = j;
   buf[j] = '\0';
   return buf;
 }
 
-char *url_start_sanitize(const char* op1, int len){
+char *url_start_sanitize(const char* op1, int *len){
   int i;
   char *buf;
   char *colon;
@@ -346,18 +346,18 @@ char *url_start_sanitize(const char* op1, int len){
     if (colon >= op1 + len) return "";
     colon++;
   }
-  i =len-(op1 - colon); /*find length of non-protocol section*/
+  i =*len-(op1 - colon); /*find length of non-protocol section*/
   buf = (char*) malloc(i);
   /*remove protocol section from tainted string*/
   strncpy(buf,colon, i);
-  len = i;
+  *len = i;
   return buf;
 }
 
-char *url_general_sanitize(const char* op1, int len){
+char *url_general_sanitize(const char* op1, int *len){
   char *buf;
   int i, j;
-  for (i = 0; i < len; i++){
+  for (i = 0; i < *len; i++){
     /*filter out non-safe url characters*/
     if (op1[i] < 33 || op1[i]>126) continue;
     /*filter out potential html*/
@@ -375,7 +375,7 @@ char *url_general_sanitize(const char* op1, int len){
     buf[i] = '\0';
   }
   j = 0;
-  for (i = 0; i < len; i++){
+  for (i = 0; i < *len; i++){
     /*filter out unsafe uri characters*/
     if (op1[i] < 33 || op1[i]>126) continue;
     /*filter out potential html*/
@@ -388,7 +388,7 @@ char *url_general_sanitize(const char* op1, int len){
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
   }
-  len = i;
+  *len = i;
   buf[j] = '\0';
   return buf;
 }
