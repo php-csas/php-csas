@@ -729,18 +729,110 @@ char *get_safety_name(uint safety) {
         }
 }
 
-static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
+static int get_safety_needed() {
+    int ctx = htmlparser_get_context(htmlparser);
+    //php_csas_error("function.echo" TSRMLS_CC, "Attempt to echo a string that might be csased");
+
+    if (htmlparser_in_js(htmlparser) && ctx != HTMLPARSER_STATE_VALUE) {
+        if (htmlparser_is_js_quoted(htmlparser)) {
+            return PHP_CSAS_SAFE_JS_STRING;
+        }
+        else {
+            // TODO: proper non-js-string sanitizer (not in scope of project)
+            return PHP_CSAS_SAFE_ALL;
+        }
+    }
+
     switch(ctx) {
-        case HTMLPARSER_STATE_TEXT:
-        case HTMLPARSER_STATE_TAG:
-        case HTMLPARSER_STATE_ATTR:
         case HTMLPARSER_STATE_VALUE:
+            switch (htmlparser_attr_type(htmlparser)) {
+                case HTMLPARSER_ATTR_URI:
+                    if (htmlparser_is_attr_quoted(htmlparser)) {
+                        if (htmlparser_is_url_start(htmlparser)) {
+                            return PHP_CSAS_SAFE_URL_START;
+                        }
+                        return PHP_CSAS_SAFE_URL_QUERY;
+                    }
+                    else {
+                        if (htmlparser_is_url_start(htmlparser)) {
+                            php_csas_error("function.echo" TSRMLS_CC, "could not reliably sanitize");
+                            return PHP_CSAS_SAFE_ALL;
+                        }
+                        return PHP_CSAS_SAFE_URL_QUERY;
+                    }
+                case HTMLPARSER_ATTR_REGULAR:
+                case HTMLPARSER_ATTR_JS:
+                case HTMLPARSER_ATTR_STYLE:
+                    // TODO: add additional proper sanitizers for js/css attrs (not in scope of project)
+                    if (htmlparser_is_attr_quoted(htmlparser)) {
+                        return PHP_CSAS_SAFE_ATTR_QUOT;
+                    }
+                    return PHP_CSAS_SAFE_ATTR_UNQUOT;
+                default:
+                    php_csas_error("function.echo" TSRMLS_CC, "html parsing error: unknown attr");
+                    return PHP_CSAS_SAFE_ALL;
+            }
+            break;
         case HTMLPARSER_STATE_COMMENT:
-        case HTMLPARSER_STATE_JS_FILE:
-        case HTMLPARSER_STATE_CSS_FILE:
-        case HTMLPARSER_STATE_ERROR:
+        case HTMLPARSER_STATE_TEXT:
+            return PHP_CSAS_SAFE_PCDATA;
+        case HTMLPARSER_STATE_ATTR:
+        case HTMLPARSER_STATE_TAG:
+            // TODO: add additional proper sanitizers for these (not in scope of project)
+            return PHP_CSAS_SAFE_PCDATA;
         default:
-    return s;
+            php_csas_error("function.echo" TSRMLS_CC, "html parsing error: unknown state");
+            return PHP_CSAS_SAFE_ALL;
+    }
+}
+
+static char *sanitize_for_context(char *s, int safety, int *len) {
+    /* 7 contexts we need to handle:
+          1) HTML PCDATA
+          2) Quoted HTML Attributes 
+          3) Unquoted HTML Attributes 
+          4) URL Start
+          5) URL Query
+          6) URL General
+          7) JavaScript String Value
+     */
+
+    if (safety == PHP_CSAS_SAFE_ALL) return s;
+
+    int safety_needed = get_safety_needed();
+
+    if (safety_needed == PHP_CSAS_SAFE_ALL) {
+        // we have no way to sanitize this
+        *len = 0;
+        return "";
+    }
+
+    if (safety_needed == safety) {
+        // if string is already safe for this context...
+        return s;
+    }
+
+    switch (get_safety_needed()) {
+            case PHP_CSAS_SAFE_PCDATA:
+                return html_escape_sanitize(s, len);
+            case PHP_CSAS_SAFE_ATTR_QUOT:
+                return html_escape_sanitize(s, len);
+            case PHP_CSAS_SAFE_ATTR_UNQUOT:
+                // TODO fix this
+                return html_escape_sanitize(s, len);
+            case PHP_CSAS_SAFE_URL_START:
+                return url_start_sanitize(s, len);
+            case PHP_CSAS_SAFE_URL_QUERY:
+                return url_query_escape_sanitize(s, len);
+            case PHP_CSAS_SAFE_URL_GENERAL:
+                return url_general_escape_sanitize(s, len);
+            case PHP_CSAS_SAFE_JS_STRING:
+                return javascript_escape_sanitize(s, len);
+    }
+
+    php_csas_error("function.echo" TSRMLS_CC, "no sanitizer available");
+    *len=0;
+    return "";
 }
 
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
@@ -808,7 +900,8 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 
         zval op1_safe;
 
-        char *s_safe = sanitize_for_context(s, 0, ctx, len);
+        // this also updates len to the appropriate value
+        char *s_safe = sanitize_for_context(s, 0, ctx, &len);
 
         Z_TYPE(op1_safe) = IS_STRING;
         Z_STRLEN(op1_safe) = len;
