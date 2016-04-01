@@ -91,6 +91,7 @@ char* html_escape_sanitize(const char* op1, int len){
     }
   }
   buf[j] = '\0';
+  len = j;
   return buf;
 }
 
@@ -124,6 +125,7 @@ char* pre_escape_sanitize(const char* op1, int len)
     }
   }
   buf[j] = '\0';
+  len = j;
   return buf;
 }
 
@@ -213,6 +215,7 @@ char* javascript_escape_sanitize(const char* op1, int len)
     }
     pos = next_pos;
   }
+  len = j;
   buf[j] = '\0';
   return buf;
 }
@@ -288,6 +291,7 @@ char* url_query_escape_sanitize(const char* op1, int len)
       break;
     }
   }
+  len = j;
   buf[j] = '\0';
   return buf;
 }
@@ -312,6 +316,7 @@ char *url_start_sanitize(const char* op1, int len){
   buf = (char*) malloc(i);
   /*remove protocol section from tainted string*/
   strncpy(buf,colon, i);
+  len = i;
   return buf;
 }
 
@@ -349,6 +354,7 @@ char *url_general_sanitize(const char* op1, int len){
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
   }
+  len = i;
   buf[j] = '\0';
   return buf;
 }
