@@ -45,6 +45,7 @@
 #include "ext/standard/info.h"
 #include "php_csas.h"
 #include "htmlparser/htmlparser.h"
+#include "sanitizers/sanitizers.c"
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
