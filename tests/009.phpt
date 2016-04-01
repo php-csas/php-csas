@@ -1,17 +1,17 @@
 --TEST--
-Fixed bug that tainted info lost if a string is parsed by htmlspecialchars
+Fixed bug that csased info lost if a string is parsed by htmlspecialchars
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
-taint.enable=1
+csas.enable=1
 --FILE--
 <?php 
-$a = "tainted string" . ".";
-taint($a); //must use concat to make the string not a internal string(introduced in 5.4)
+$a = "csased string" . ".";
+csas($a); //must use concat to make the string not a internal string(introduced in 5.4)
 
 $b = htmlspecialchars($a);
-var_dump(is_tainted($b));
-var_dump(is_tainted($a));
+var_dump(is_csased($b));
+var_dump(is_csased($a));
 ?>
 --EXPECTF--
 bool(false)

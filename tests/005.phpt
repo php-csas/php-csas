@@ -1,14 +1,14 @@
 --TEST--
 Check Taint with separation 
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
-taint.enable=1
+csas.enable=1
 report_memleaks=Off
 --FILE--
 <?php 
-$a = "tainted string" . ".";
-taint($a); //must use concat to make the string not a internal string(introduced in 5.4)
+$a = "csased string" . ".";
+csas($a); //must use concat to make the string not a internal string(introduced in 5.4)
 
 $b = $a;
 $c = &$b; //separation
@@ -20,11 +20,11 @@ echo $e;
 print $a;
 ?>
 --EXPECTF--
-Warning: main(): Attempt to echo a string that might be tainted in %s005.php on line %d
-tainted string.
-Warning: main(): Attempt to print a string that might be tainted in %s005.php on line %d
-tainted string.
-Warning: main(): Attempt to echo a string that might be tainted in %s005.php on line %d
-tainted string.
-Warning: main(): Attempt to print a string that might be tainted in %s005.php on line %d
-tainted string.
+Warning: main(): Attempt to echo a string that might be csased in %s005.php on line %d
+csased string.
+Warning: main(): Attempt to print a string that might be csased in %s005.php on line %d
+csased string.
+Warning: main(): Attempt to echo a string that might be csased in %s005.php on line %d
+csased string.
+Warning: main(): Attempt to print a string that might be csased in %s005.php on line %d
+csased string.

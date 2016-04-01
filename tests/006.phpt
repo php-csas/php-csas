@@ -1,14 +1,14 @@
 --TEST--
 Check Taint with send_var/send_ref
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
-taint.enable=1
+csas.enable=1
 report_memleaks=Off
 --FILE--
 <?php 
-$a = "tainted string" . ".";
-taint($a); //must use concat to make the string not a internal string(introduced in 5.4)
+$a = "csased string" . ".";
+csas($a); //must use concat to make the string not a internal string(introduced in 5.4)
 
 function test1(&$a) {
    echo $a;
@@ -25,8 +25,8 @@ $b = $a;
 test1($a);
 test2($a);
 
-$c = "tainted string" . ".";
-taint($c);
+$c = "csased string" . ".";
+csas($c);
 
 $e = &$c;
 
@@ -35,15 +35,15 @@ test2($c);
 
 ?>
 --EXPECTF--
-Warning: test1(): Attempt to echo a string that might be tainted in %s006.php on line %d
-tainted string.
-Warning: test2(): Attempt to echo a string that might be tainted in %s006.php on line %d
-tainted string.
-Warning: test1(): Attempt to echo a string that might be tainted in %s006.php on line %d
-tainted string.
-Warning: test2(): Attempt to echo a string that might be tainted in %s006.php on line %d
-tainted string.
-Warning: test1(): Attempt to echo a string that might be tainted in %s006.php on line %d
-tainted string.
-Warning: test2(): Attempt to echo a string that might be tainted in %s006.php on line %d
-tainted string.
+Warning: test1(): Attempt to echo a string that might be csased in %s006.php on line %d
+csased string.
+Warning: test2(): Attempt to echo a string that might be csased in %s006.php on line %d
+csased string.
+Warning: test1(): Attempt to echo a string that might be csased in %s006.php on line %d
+csased string.
+Warning: test2(): Attempt to echo a string that might be csased in %s006.php on line %d
+csased string.
+Warning: test1(): Attempt to echo a string that might be csased in %s006.php on line %d
+csased string.
+Warning: test2(): Attempt to echo a string that might be csased in %s006.php on line %d
+csased string.

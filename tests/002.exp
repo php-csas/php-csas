@@ -1,6 +1,6 @@
-Warning: main(): Attempt to print a string that might be tainted in %s002.php on line %d
-tainted string.
-Warning: file_put_contents(): Second argument contains data that might be tainted in %s002.php on line %d
-tainted string.+
+Warning: main(): Attempt to print a string that might be csased in %s002.php on line %d
+csased string.
+Warning: file_put_contents(): Second argument contains data that might be csased in %s002.php on line %d
+csased string.+
 
-Warning: eval(): Eval code contains data that might be tainted in %s002.php on line %d
+Warning: eval(): Eval code contains data that might be csased in %s002.php on line %d

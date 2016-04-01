@@ -1,23 +1,23 @@
 --TEST--
 Check Taint with dim assign contact
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
-taint.enable=1
+csas.enable=1
 report_memleaks=Off
 --FILE--
 <?php 
-$a = "tainted string" . ".";
-taint($a);
+$a = "csased string" . ".";
+csas($a);
 $b = array("this is");
 $b[0] .= $a;
-var_dump(is_tainted($b[0])); 
+var_dump(is_csased($b[0])); 
 
 $c = new stdClass();
 $c->foo = "this is";
 $c->foo .= $a;
 
-var_dump(is_tainted($c->foo));
+var_dump(is_csased($c->foo));
 ?>
 --EXPECTF--
 bool(true)

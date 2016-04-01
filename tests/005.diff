@@ -1,9 +1,9 @@
-001+ /home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/taint.so: undefined symbol: print
-001- Warning: main(): Attempt to echo a string that might be tainted in %s005.php on line %d
-002- tainted string.
-003- Warning: main(): Attempt to print a string that might be tainted in %s005.php on line %d
-004- tainted string.
-005- Warning: main(): Attempt to echo a string that might be tainted in %s005.php on line %d
-006- tainted string.
-007- Warning: main(): Attempt to print a string that might be tainted in %s005.php on line %d
-008- tainted string.
+001+ /home/vagrant/php-5.4.45/php-install-directory/bin/php: symbol lookup error: /home/vagrant/php-csas/modules/csas.so: undefined symbol: print
+001- Warning: main(): Attempt to echo a string that might be csased in %s005.php on line %d
+002- csased string.
+003- Warning: main(): Attempt to print a string that might be csased in %s005.php on line %d
+004- csased string.
+005- Warning: main(): Attempt to echo a string that might be csased in %s005.php on line %d
+006- csased string.
+007- Warning: main(): Attempt to print a string that might be csased in %s005.php on line %d
+008- csased string.

@@ -1,15 +1,15 @@
 --TEST--
-Bug #63100 (array_walk_recursive behaves wrongly when taint enabled)
+Bug #63100 (array_walk_recursive behaves wrongly when csas enabled)
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
-taint.enable=1
+csas.enable=1
 report_memleaks=0
 --FILE--
 <?php 
 $a = array();
-$a[0] = "tainted string" . "<>";
-taint($a[0]);
+$a[0] = "csased string" . "<>";
+csas($a[0]);
 
 function xxx(&$item) {
     $item = htmlspecialchars($item);
@@ -21,4 +21,4 @@ echo $a[0];
 
 ?>
 --EXPECTF--
-tainted string&lt;&gt;
+csased string&lt;&gt;

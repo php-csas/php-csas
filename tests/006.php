@@ -1,6 +1,6 @@
 <?php 
-$a = "tainted string" . ".";
-taint($a); //must use concat to make the string not a internal string(introduced in 5.4)
+$a = "csased string" . ".";
+csas($a); //must use concat to make the string not a internal string(introduced in 5.4)
 
 function test1(&$a) {
    echo $a;
@@ -17,8 +17,8 @@ $b = $a;
 test1($a);
 test2($a);
 
-$c = "tainted string" . ".";
-taint($c);
+$c = "csased string" . ".";
+csas($c);
 
 $e = &$c;
 

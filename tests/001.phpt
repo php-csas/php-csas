@@ -1,10 +1,10 @@
 --TEST--
-Check for taint presence
+Check for php-csas presence
 --SKIPIF--
-<?php if (!extension_loaded("taint")) print "skip"; ?>
+<?php if (!extension_loaded("csas")) print "skip"; ?>
 --FILE--
-<?php 
-echo "taint extension is available";
+<?php
+echo "php-csas extension is available";
 /*
 	you can add regression tests for your extension here
 
@@ -18,4 +18,4 @@ echo "taint extension is available";
 */
 ?>
 --EXPECT--
-taint extension is available
+csas extension is available
