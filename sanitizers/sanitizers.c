@@ -101,7 +101,7 @@ char* html_escape_sanitize(const char* op1, int *len){
     switch (op1[i]){
       default: j++; break;
       case '&': j+=5; break;
-      case '"': j+=7; break;
+      case '"': j+=6; break;
       case '\'': j+=5; break;
       case '<': j+=4; break;
       case '>':  j+=4; break;
@@ -117,8 +117,8 @@ char* html_escape_sanitize(const char* op1, int *len){
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
-      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
-      case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quot;"); j+=6; break;
+      case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
       case '\r': case '\n': case '\v': case '\f': case '\t': buf[j] = ' '; j++; break;
@@ -243,7 +243,8 @@ char* javascript_escape_sanitize(const char* op1, int *len)
     }
     pos = next_pos;
   }
-
+  printf("%d\n", *len);
+  printf("%d\n", j);
   /*Fill in new string*/
   pos = op1;
   buf = (char*) malloc(j+1);
@@ -289,6 +290,7 @@ char* javascript_escape_sanitize(const char* op1, int *len)
     pos = next_pos;
   }
   *len = j;
+  printf("%d", *len);
   buf[j] = '\0';
   return buf;
 }
@@ -422,4 +424,10 @@ char *url_general_sanitize(const char* op1, int *len){
 }
 
 main(){
+  char * buf;
+  int *len;
+  *len = 5;
+  printf("Testing \n");
+  buf = javascript_escape_sanitize("david", len);
+  printf("%s\n", buf);
 }
