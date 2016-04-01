@@ -129,6 +129,45 @@ char* html_escape_sanitize(const char* op1, int *len){
   return buf;
 }
 
+char* html_unquoted_escape_sanitize(const char* op1, int *len){
+  int i, j;
+  char* buf;
+
+  buf = (char *) malloc(*len+1);
+
+  for (i = 0; i < *len; i++) {
+    char c = op1[i];
+    switch (c) {
+      case '=': {
+        if (i == 0 || i == (*len - 1))
+          buf[i]='_';
+        else
+          buf[i]=c;
+        break;
+      }
+      case '-':
+      case '.':
+      case '_':
+      case ':': {
+        buf[i] = c;
+        break;
+      }
+      default: {
+        if ((c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9')) {
+          buf[i] = c;
+        } else {
+          buf[i] = '_';
+        }
+        break;
+      }
+    }
+  }
+  buf[*len] = '\0';
+  return buf;
+}
+
 char* pre_escape_sanitize(const char* op1, int *len)
 {
   char *buf;
@@ -338,20 +377,9 @@ char *url_start_sanitize(const char* op1, int *len){
   if (*len >=8  && strncmp(op1, "https://", 8) == 0) return op1;
   if (*len >= 7 && strncmp(op1, "http://", 7) == 0) return op1;
   if (*len >= 6 && strncmp(op1, "mailto:", 6) == 0) return op1;
-  /*remove if not a whitelisted protocol*/
-  /*find first colon*/
-  colon = strchr(op1, ':');
-  if (colon == NULL) return "";
-  while (*colon == ':' || *colon == '/'){
-    if (colon >= op1 + *len) return "";
-    colon++;
-  }
-  i =*len-(op1 - colon); /*find length of non-protocol section*/
-  buf = (char*) malloc(i);
-  /*remove protocol section from tainted string*/
-  strncpy(buf,colon, i);
-  *len = i;
-  return buf;
+
+  *len = 0;
+  return "";
 }
 
 char *url_general_sanitize(const char* op1, int *len){
@@ -391,4 +419,7 @@ char *url_general_sanitize(const char* op1, int *len){
   *len = i;
   buf[j] = '\0';
   return buf;
+}
+
+main(){
 }
