@@ -413,7 +413,7 @@ char *url_general_sanitize(const char* op1, int *len){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
       case '"': strcpy(buf+j,"&quot;"); j+=8; break;
-      case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
