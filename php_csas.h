@@ -49,10 +49,18 @@ extern zend_module_entry csas_module_entry;
 
 #define PHP_CSAS_VERSION "1.3.0-dev"
 
-#define PHP_CSAS_MAGIC_LENGTH   sizeof(unsigned)
-#define PHP_CSAS_MAGIC_NONE     0x00000000
-#define PHP_CSAS_MAGIC_POSSIBLE 0x6A8FCE84
-#define PHP_CSAS_MAGIC_UNCSAS  0x2C5E7F2D
+#define PHP_CSAS_MAGIC_NUMBER           0x6A8FCE84
+#define PHP_CSAS_MAGIC_LENGTH   (sizeof(unsigned)*2)
+
+#define PHP_CSAS_UNSAFE            0
+#define PHP_CSAS_SAFE_PCDATA       (1 << 1)
+#define PHP_CSAS_SAFE_ATTR_QUOT    (1 << 2)
+#define PHP_CSAS_SAFE_ATTR_UNQUOT  (1 << 3)
+#define PHP_CSAS_SAFE_URL_START    (1 << 4)
+#define PHP_CSAS_SAFE_URL_QUERY    (1 << 5)
+#define PHP_CSAS_SAFE_URL_GENERAL  (1 << 6)
+#define PHP_CSAS_SAFE_JS_STRING    (1 << 7)
+#define PHP_CSAS_SAFE_ALL          0xFFFFFFFF
 
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4) 
 #  define CSAS_OP1_TYPE(n)         ((n)->op1.op_type)
@@ -173,9 +181,16 @@ extern zend_module_entry csas_module_entry;
 		zval_ptr_dtor(&should_free.var); \
 	}
 
-#define PHP_CSAS_MARK(zv, mark) *((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1)) = (mark)
-#define PHP_CSAS_POSSIBLE(zv) (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_POSSIBLE)
-#define PHP_CSAS_UNCSAS(zv)  (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_UNCSAS)
+#define PHP_CSAS_SET_SAFETY_(zv, mark) *((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1 + sizeof(uint))) = (mark)
+#define PHP_CSAS_GET_SAFETY_(zv) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1 + sizeof(uint)))))
+
+#define PHP_CSAS_IS_MARKED(zv) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))) == PHP_CSAS_MAGIC_NUMBER)
+#define PHP_CSAS_SET_MARKED(zv) ((*((unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1))) = PHP_CSAS_MAGIC_NUMBER)
+
+
+
+//#define PHP_CSAS_POSSIBLE(zv) (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_POSSIBLE)
+//#define PHP_CSAS_UNCSAS(zv)  (*(unsigned *)(Z_STRVAL_P(zv) + Z_STRLEN_P(zv) + 1) == PHP_CSAS_MAGIC_UNCSAS)
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 3))
 #  define Z_ADDREF_P   ZVAL_ADDREF
@@ -203,6 +218,7 @@ PHP_MINFO_FUNCTION(csas);
 
 PHP_FUNCTION(csas);
 PHP_FUNCTION(uncsas);
+PHP_FUNCTION(html_safe);
 PHP_FUNCTION(is_csased);
 
 PHP_FUNCTION(csas_strval);
