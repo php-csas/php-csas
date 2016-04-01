@@ -4,7 +4,7 @@
 - *One Goal*: Context-Sensitive Auto-Sanitization for PHP
 
 ## Overview
-- We are building off of the work done by previous leaders in this field, including inspiration from a [paper from Google and UC Berkeley](http://webblaze.cs.berkeley.edu/papers/csas-ccs11.pdf). Languages like Java, Python, Ruby, and others have modules similar to PHP-CSAS for implementing auto-escaping for various template languages. Our goal is to bring the functionality of these languages into PHP. 
+- We are building off of the work done by previous leaders in this field, including inspiration from a [paper from Google and UC Berkeley](http://webblaze.cs.berkeley.edu/papers/csas-ccs11.pdf). Languages like Java ([Google Soy Templates](https://developers.google.com/closure/templates/docs/security#autoescaping)), C ([CTemplate](https://htmlpreview.github.io/?https://raw.githubusercontent.com/OlafvdSpek/ctemplate/master/doc/auto_escape.html)), and Python ([Django](https://docs.djangoproject.com/en/dev/ref/templates/builtins/#autoescape)) and others have modules similar to PHP-CSAS for implementing auto-escaping for various template languages. Our goal is to bring the functionality of these languages into PHP. 
 
 
 
