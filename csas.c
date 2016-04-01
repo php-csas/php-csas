@@ -45,7 +45,7 @@
 #include "ext/standard/info.h"
 #include "php_csas.h"
 #include "htmlparser/htmlparser.h"
-#include "sanitizers/sanitizers.c"
+#include "sanitizers/sanitizers.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
@@ -898,8 +898,8 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         int len = Z_STRLEN_P(op1);
         int ctx = htmlparser_get_context(htmlparser);
 
-        php_printf("About to echo in context: %s<br>", get_parser_state_name(ctx));
-        php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
+        //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
+        //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
 
 
 
