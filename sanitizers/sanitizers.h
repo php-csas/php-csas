@@ -19,6 +19,7 @@
 /*Sanitizer declarations*/
 char* html_escape_sanitize(const char* op1, int len);
 char* pre_escape_sanitize(const char* op1, int len);
+char* html_unquoted(const char* op1, int len);
 char* javascript_escape_sanitize(const char* op1, int len);
 char* url_query_escape_sanitize(const char* op1, int len);
 char *url_start_sanitize(const char* op1, int len);
