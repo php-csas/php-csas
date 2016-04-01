@@ -686,6 +686,28 @@ char *get_parser_state_name(int ctx) {
 
 static char *sanitize_for_context(char *s, int tag, int ctx, int *len) {
     *len = strlen(s);
+
+    switch(ctx) {
+        case HTMLPARSER_STATE_TEXT:
+           return "STATE_TEXT";
+        case HTMLPARSER_STATE_TAG:
+            return "STATE_TAG";
+        case HTMLPARSER_STATE_ATTR:
+            return "STATE_ATTR";
+        case HTMLPARSER_STATE_VALUE:
+            return "STATE_VALUE";
+        case HTMLPARSER_STATE_COMMENT:
+            return "STATE_COMMENT";
+        case HTMLPARSER_STATE_JS_FILE:
+            return "STATE_JS_FILE";
+        case HTMLPARSER_STATE_CSS_FILE:
+            return "STATE_CSS_FILE";
+        case HTMLPARSER_STATE_ERROR:
+            return "STATE_ERROR";
+        default:
+            return "UNKNOWN STATE";
+
+
     return s;
 }
 
@@ -742,8 +764,9 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 		char* s = cast_zval_to_string(op1);
 
         int ctx = htmlparser_get_context(htmlparser);
+        
 
-        php_printf("About to echo in context: %s<br>\n", get_parser_state_name(ctx));
+        php_printf("About to echo in context: %s<br>", get_parser_state_name(ctx));
 
 
         zval op1_safe;
