@@ -1,7 +1,7 @@
 <?php 
 $a = array();
-$a[0] = "tainted string" . "<>";
-taint($a[0]);
+$a[0] = "csased string" . "<>";
+csas($a[0]);
 
 function xxx(&$item) {
     $item = htmlspecialchars($item);
