@@ -331,6 +331,8 @@ char* url_query_escape_sanitize(const char* op1, int *len)
       break;
     }
   }
+
+  pos = op1;
   buf = (char*) malloc(j+1);
   while (true){
     while (pos < limit && is_url_query_escape_safe_char(*pos)) {
