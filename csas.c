@@ -729,9 +729,17 @@ char *get_safety_name(uint safety) {
         }
 }
 
-
-static char *sanitize_for_context(char *s, int tag, int ctx, int *len) {
-    *len = strlen(s);
+static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
+    switch(ctx) {
+        case HTMLPARSER_STATE_TEXT:
+        case HTMLPARSER_STATE_TAG:
+        case HTMLPARSER_STATE_ATTR:
+        case HTMLPARSER_STATE_VALUE:
+        case HTMLPARSER_STATE_COMMENT:
+        case HTMLPARSER_STATE_JS_FILE:
+        case HTMLPARSER_STATE_CSS_FILE:
+        case HTMLPARSER_STATE_ERROR:
+        default:
     return s;
 }
 
@@ -790,16 +798,17 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 
         // the string value of the output
 		char* s = cast_zval_to_string(op1);
+        int len = Z_STRLEN(op1);
 
         int ctx = htmlparser_get_context(htmlparser);
 
+        php_printf("About to echo in context: %s<br>", get_parser_state_name(ctx));
         php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
 
 
         zval op1_safe;
-        int len;
 
-        char *s_safe = sanitize_for_context(s, 0, ctx, &len);
+        char *s_safe = sanitize_for_context(s, 0, ctx, len);
 
         Z_TYPE(op1_safe) = IS_STRING;
         Z_STRLEN(op1_safe) = len;
