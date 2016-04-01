@@ -191,8 +191,8 @@ char* pre_escape_sanitize(const char* op1, int *len)
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
-      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
-      case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quot;"); j+=7; break;
+      case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
