@@ -311,44 +311,31 @@ char* url_query_escape_sanitize(const char* op1, int *len)
   char* buf;
   const char* pos = op1;
   const char* limit = op1 + *len;
+  unsigned char c;
 
   /*calc sizes for safe characters*/
-  while (true) {
-    /*Peel off any initial runs of safe characters and emit them all
-    at once.*/
-      while (pos < limit && is_url_query_escape_safe_char(*pos)) {
+  while (pos < limit) {
+      if (is_url_query_escape_safe_char(*pos))
+          j++;
+      else
+          j+=3;
       pos++;
-      j++;
-    }
-    /*Sizes for unsafe characters*/
-    if (pos < limit) {
-      unsigned char c = *pos;
-      if (c == ' ')  j++;
-      else j+=3;
-      pos++;
-    } else {
-      /*We're done!*/
-      break;
-    }
   }
 
   pos = op1;
+  j = 0;
   buf = (char*) malloc(j+1);
-  while (true){
-    while (pos < limit && is_url_query_escape_safe_char(*pos)) {
-      buf[j] = *pos;
-      pos++;
-      j++;
-    }
-    // Now deal with a single unsafe character.
-    if (pos < limit) {
-      unsigned char c = *pos;
-      if (c == ' ') {
-        buf[j] = '+';
-        j++;
-      } else {
+
+  while (pos < limit) {
+      if (is_url_query_escape_safe_char(*pos)) {
+          buf[j] = *pos;
+          j++;
+      }
+      else {
         buf[j] = '%';
         j++;
+
+        c = *pos;
         if((c>>4) < 10){
           buf[j] = (c>>4)+'0';
         }else{
@@ -363,10 +350,6 @@ char* url_query_escape_sanitize(const char* op1, int *len)
         j++;
       }
       pos++;
-    } else {
-      // We're done!
-      break;
-    }
   }
   *len = j;
   buf[j] = '\0';
