@@ -45,7 +45,7 @@
 #include "ext/standard/info.h"
 #include "php_csas.h"
 #include "htmlparser/htmlparser.h"
-#include "sanitizers/sanitizers.c"
+#include "sanitizers/sanitizers.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
@@ -747,9 +747,6 @@ static int get_safety_needed() {
             return PHP_CSAS_SAFE_ALL;
         }
     }
-}
-
-static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
     switch(ctx) {
         case HTMLPARSER_STATE_VALUE:
             // we are inside an attribute value.. check what type of attribute
@@ -763,7 +760,7 @@ static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
                     }
                     else {
                         if (htmlparser_is_url_start(htmlparser)) {
-                            php_csas_error("function.echo" TSRMLS_CC, "could not reliably sanitize");
+                            php_printf("ERROR: can't sanitize unquoted url start");
                             return PHP_CSAS_SAFE_ALL;
                         }
                         return PHP_CSAS_SAFE_URL_QUERY;
@@ -777,7 +774,7 @@ static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
                     }
                     return PHP_CSAS_SAFE_ATTR_UNQUOT;
                 default:
-                    php_csas_error("function.echo" TSRMLS_CC, "html parsing error: unknown attr");
+                    php_printf("ERROR: unknown attr");
                     return PHP_CSAS_SAFE_ALL;
             }
             break;
@@ -789,7 +786,7 @@ static char *sanitize_for_context(char *s, int tag, int ctx, int len) {
             // TODO: add additional proper sanitizers for these (not in scope of project)
             return PHP_CSAS_SAFE_PCDATA;
         default:
-            php_csas_error("function.echo" TSRMLS_CC, "html parsing error: unknown state");
+            php_printf("ERROR: unknown state");
             return PHP_CSAS_SAFE_ALL;
     }
 }
@@ -824,7 +821,7 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
             case PHP_CSAS_SAFE_PCDATA:
                 return html_escape_sanitize(s, len);
             case PHP_CSAS_SAFE_ATTR_QUOT:
-                return html_escape_sanitize(s, len);
+                return html_unquoted_escape_sanitize(s, len);
             case PHP_CSAS_SAFE_ATTR_UNQUOT:
                 // TODO fix this
                 return html_escape_sanitize(s, len);
@@ -838,7 +835,7 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
                 return javascript_escape_sanitize(s, len);
     }
 
-    php_csas_error("function.echo" TSRMLS_CC, "no sanitizer available");
+    php_printf("ERROR: no sanitizer available");
     *len=0;
     return "";
 }
@@ -898,21 +895,15 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         // the string value of the output
         zval op1_safe;
         char* s = cast_zval_to_string(op1);
-        int len = Z_STRLEN(op1);
+        int len = Z_STRLEN_P(op1);
         int ctx = htmlparser_get_context(htmlparser);
 
-        php_printf("About to echo in context: %s<br>", get_parser_state_name(ctx));
-        php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
+        //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
+        //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
 
-<<<<<<< HEAD
-        char *s_safe = sanitize_for_context(s, 0, ctx, len);
-=======
-
-        zval op1_safe;
 
         // this also updates len to the appropriate value
-        char *s_safe = sanitize_for_context(s, 0, ctx, &len);
->>>>>>> 5a48e818a60b78e1482c5a73afca2c110f1990b8
+        char *s_safe = sanitize_for_context(s, safety, &len);
 
         Z_TYPE(op1_safe) = IS_STRING;
         Z_STRLEN(op1_safe) = len;
@@ -3362,6 +3353,7 @@ PHP_MSHUTDOWN_FUNCTION(csas)
  */
 PHP_RINIT_FUNCTION(csas)
 {
+    htmlparser = NULL;
     if (SG(sapi_started) || !CSAS_G(enable)) {
         return SUCCESS;
     }

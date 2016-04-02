@@ -142,40 +142,10 @@ char* html_escape_sanitize(const char* op1, int *len){
 }
 
 char* html_unquoted_escape_sanitize(const char* op1, int *len){
-  int i, j;
   char* buf;
 
   buf = (char *) emalloc(*len+1);
 
-  for (i = 0; i < *len; i++) {
-    char c = op1[i];
-    switch (c) {
-      case '=': {
-        if (i == 0 || i == (*len - 1))
-          buf[i]='_';
-        else
-          buf[i]=c;
-        break;
-      }
-      case '-':
-      case '.':
-      case '_':
-      case ':': {
-        buf[i] = c;
-        break;
-      }
-      default: {
-        if ((c >= 'a' && c <= 'z') ||
-            (c >= 'A' && c <= 'Z') ||
-            (c >= '0' && c <= '9')) {
-          buf[i] = c;
-        } else {
-          buf[i] = '_';
-        }
-        break;
-      }
-    }
-  }
   buf[*len] = '\0';
   return buf;
 }
@@ -203,8 +173,8 @@ char* pre_escape_sanitize(const char* op1, int *len)
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
-      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
-      case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quot;"); j+=6; break;
+      case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
@@ -259,7 +229,12 @@ char* javascript_escape_sanitize(const char* op1, int *len)
   printf("%d\n", j);
   /*Fill in new string*/
   pos = op1;
+<<<<<<< HEAD
   buf = (char*) emalloc(j+1);
+=======
+  buf = (char*) malloc(j+1);
+  j = 0;
+>>>>>>> db904ac5ad51b9b399aefa7df62e5c8ef2c0deb2
   while (pos < limit) {
     const char* next_pos = pos;
     uint16_t code_unit = utf8_code_unit(&next_pos, limit);
@@ -323,42 +298,31 @@ char* url_query_escape_sanitize(const char* op1, int *len)
   char* buf;
   const char* pos = op1;
   const char* limit = op1 + *len;
+  unsigned char c;
 
   /*calc sizes for safe characters*/
-  while (true) {
-    /*Peel off any initial runs of safe characters and emit them all
-    at once.*/
-      while (pos < limit && is_url_query_escape_safe_char(*pos)) {
+  while (pos < limit) {
+      if (is_url_query_escape_safe_char(*pos))
+          j++;
+      else
+          j+=3;
       pos++;
-      j++;
-    }
-    /*Sizes for unsafe characters*/
-    if (pos < limit) {
-      unsigned char c = *pos;
-      if (c == ' ')  j++;
-      else j+=3;
-      pos++;
-    } else {
-      /*We're done!*/
-      break;
-    }
   }
+
+  pos = op1;
   buf = (char*) emalloc(j+1);
-  while (true){
-    while (pos < limit && is_url_query_escape_safe_char(*pos)) {
-      buf[j] = *pos;
-      pos++;
-      j++;
-    }
-    // Now deal with a single unsafe character.
-    if (pos < limit) {
-      unsigned char c = *pos;
-      if (c == ' ') {
-        buf[j] = '+';
-        j++;
-      } else {
+  j = 0;
+
+  while (pos < limit) {
+      if (is_url_query_escape_safe_char(*pos)) {
+          buf[j] = *pos;
+          j++;
+      }
+      else {
         buf[j] = '%';
         j++;
+
+        c = *pos;
         if((c>>4) < 10){
           buf[j] = (c>>4)+'0';
         }else{
@@ -373,10 +337,6 @@ char* url_query_escape_sanitize(const char* op1, int *len)
         j++;
       }
       pos++;
-    } else {
-      // We're done!
-      break;
-    }
   }
   *len = j;
   buf[j] = '\0';
@@ -424,8 +384,8 @@ char *url_general_sanitize(const char* op1, int *len){
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
-      case '"': strcpy(buf+j,"&quote;"); j+=7; break;
-      case '\\': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '"': strcpy(buf+j,"&quot;"); j+=8; break;
+      case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
