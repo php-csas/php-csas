@@ -142,10 +142,44 @@ char* html_escape_sanitize(const char* op1, int *len){
 }
 
 char* html_unquoted_escape_sanitize(const char* op1, int *len){
+  int i; j;
   char* buf;
 
-  buf = (char *) emalloc(*len+1);
+  for (i = 0; i < *len; i++){
+    switch(op1[i]){
+      case '\t':
+      case '\n':
+      case 12: /*Form Feed*/
+      case ' ': break;
+      case '&': j+=5; break;
+      case '>': j+=4; break;
+      case '"': j+=6; break;
+      case '\'': j+=5; break;
+      case '<': j+=4; break;
+      default:
+        j++;
+    }
+  }
+  buf = emalloc(j);
+  j = 0;
 
+  for (i = 0; i < *len; i++){
+    switch(op1[i]){
+      case '\t':
+      case '\n':
+      case 12: /*Form Feed*/
+      case ' ': break;
+      case '&': strcpy(buf+j,"&amp;"); j+=5; break;
+      case '>': strcpy(buf+j,"&gt;"); j+=4; break;
+      case '"': strcpy(buf+j,"&quot;"); j+=6; break;
+      case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
+      case '<': strcpy(buf+j, "&lt;"); j+=4; break;
+      default:
+        buf[j] = op1[i];
+        j++;
+    }
+  }
+  *len = j;
   buf[*len] = '\0';
   return buf;
 }
