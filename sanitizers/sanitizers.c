@@ -130,40 +130,10 @@ char* html_escape_sanitize(const char* op1, int *len){
 }
 
 char* html_unquoted_escape_sanitize(const char* op1, int *len){
-  int i, j;
   char* buf;
 
   buf = (char *) malloc(*len+1);
 
-  for (i = 0; i < *len; i++) {
-    char c = op1[i];
-    switch (c) {
-      case '=': {
-        if (i == 0 || i == (*len - 1))
-          buf[i]='_';
-        else
-          buf[i]=c;
-        break;
-      }
-      case '-':
-      case '.':
-      case '_':
-      case ':': {
-        buf[i] = c;
-        break;
-      }
-      default: {
-        if ((c >= 'a' && c <= 'z') ||
-            (c >= 'A' && c <= 'Z') ||
-            (c >= '0' && c <= '9')) {
-          buf[i] = c;
-        } else {
-          buf[i] = '_';
-        }
-        break;
-      }
-    }
-  }
   buf[*len] = '\0';
   return buf;
 }
