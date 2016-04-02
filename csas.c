@@ -2349,6 +2349,16 @@ static void php_csas_fcall_check(ZEND_OPCODE_HANDLER_ARGS, zend_op *opline, char
                 }
                 break;
             }
+
+            if (strncmp("htmlspecialchars", fname, len) == 0) {
+                zval *el;
+                el = *((zval **) (p - (arg_count)));
+                if (el && IS_STRING == Z_TYPE_P(el) && php_csas_get_safety(el) != PHP_CSAS_SAFE_ALL) {
+                    php_csas_set_safety(el, PHP_CSAS_SAFE_PCDATA);
+                }
+                break;
+            }
+
 #if 0
             if (strncmp("escapeshellcmd", fname, len) == 0
                     || strncmp("htmlspecialchars", fname, len) == 0
