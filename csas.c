@@ -819,12 +819,10 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
 
     switch (get_safety_needed()) {
             case PHP_CSAS_SAFE_PCDATA:
-                return html_escape_sanitize(s, len);
             case PHP_CSAS_SAFE_ATTR_QUOT:
-                return html_unquoted_escape_sanitize(s, len);
-            case PHP_CSAS_SAFE_ATTR_UNQUOT:
-                // TODO fix this
                 return html_escape_sanitize(s, len);
+            case PHP_CSAS_SAFE_ATTR_UNQUOT:
+                return html_unquoted_escape_sanitize(s, len);
             case PHP_CSAS_SAFE_URL_START:
                 return url_start_sanitize(s, len);
             case PHP_CSAS_SAFE_URL_QUERY:

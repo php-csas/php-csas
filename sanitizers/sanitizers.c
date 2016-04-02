@@ -32,22 +32,12 @@
   +----------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 #include "stdint.h"
+
 #include "php.h"
-#include "SAPI.h"
-#include "zend_compile.h"
-#include "zend_execute.h"
-#include "php_ini.h"
-#include "ext/standard/info.h"
-#include "php_csas.h"
-#include "htmlparser/htmlparser.h"
 #include "sanitizers.h"
 
 typedef int bool;
@@ -142,15 +132,16 @@ char* html_escape_sanitize(const char* op1, int *len){
 }
 
 char* html_unquoted_escape_sanitize(const char* op1, int *len){
-  int i; j;
+  int i, j;
   char* buf;
+  char c;
 
   for (i = 0; i < *len; i++){
     switch(op1[i]){
-      case '\t':
-      case '\n':
-      case 12: /*Form Feed*/
-      case ' ': break;
+      case '\t': j += 4; break;
+      case '\n': j += 5; break;
+      case 12: j += 5; break;
+      case ' ': j += 5; break;
       case '&': j+=5; break;
       case '>': j+=4; break;
       case '"': j+=6; break;
@@ -165,10 +156,10 @@ char* html_unquoted_escape_sanitize(const char* op1, int *len){
 
   for (i = 0; i < *len; i++){
     switch(op1[i]){
-      case '\t':
-      case '\n':
-      case 12: /*Form Feed*/
-      case ' ': break;
+      case '\t': strcpy(buf+j,"&#9;"); j+=4; break;
+      case '\n': strcpy(buf+j,"&#10;"); j+=5; break;
+      case 12: strcpy(buf+j,"&#12;"); j+=5; break;
+      case ' ': strcpy(buf+j,"&#32;"); j+=5; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
       case '"': strcpy(buf+j,"&quot;"); j+=6; break;
@@ -263,12 +254,8 @@ char* javascript_escape_sanitize(const char* op1, int *len)
   printf("%d\n", j);
   /*Fill in new string*/
   pos = op1;
-<<<<<<< HEAD
   buf = (char*) emalloc(j+1);
-=======
-  buf = (char*) malloc(j+1);
   j = 0;
->>>>>>> db904ac5ad51b9b399aefa7df62e5c8ef2c0deb2
   while (pos < limit) {
     const char* next_pos = pos;
     uint16_t code_unit = utf8_code_unit(&next_pos, limit);
