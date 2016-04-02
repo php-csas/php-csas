@@ -32,10 +32,22 @@
   +----------------------------------------------------------------------+
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "stdint.h"
+#include "php.h"
+#include "SAPI.h"
+#include "zend_compile.h"
+#include "zend_execute.h"
+#include "php_ini.h"
+#include "ext/standard/info.h"
+#include "php_csas.h"
+#include "htmlparser/htmlparser.h"
 #include "sanitizers.h"
 
 typedef int bool;
@@ -108,7 +120,7 @@ char* html_escape_sanitize(const char* op1, int *len){
       case '\r': case '\n': case '\v': case '\f': case '\t': j++; break;
     }
   }
-  buf = (char*)malloc(sizeof(char)*j+1);
+  buf = (char*)emalloc(sizeof(char)*j+1);
   for (i = 0; i < j+1; i++){
     buf[i] = '\0';
   }
@@ -133,7 +145,7 @@ char* html_unquoted_escape_sanitize(const char* op1, int *len){
   int i, j;
   char* buf;
 
-  buf = (char *) malloc(*len+1);
+  buf = (char *) emalloc(*len+1);
 
   for (i = 0; i < *len; i++) {
     char c = op1[i];
@@ -182,7 +194,7 @@ char* pre_escape_sanitize(const char* op1, int *len)
       case '>':  j+=4; break;
     }
   }
-  buf = (char*) malloc(sizeof(char)*j+1);
+  buf = (char*) emalloc(sizeof(char)*j+1);
   for (i = 0; i < j+1; i++){
     buf[i] = '\0';
   }
@@ -247,7 +259,7 @@ char* javascript_escape_sanitize(const char* op1, int *len)
   printf("%d\n", j);
   /*Fill in new string*/
   pos = op1;
-  buf = (char*) malloc(j+1);
+  buf = (char*) emalloc(j+1);
   while (pos < limit) {
     const char* next_pos = pos;
     uint16_t code_unit = utf8_code_unit(&next_pos, limit);
@@ -331,7 +343,7 @@ char* url_query_escape_sanitize(const char* op1, int *len)
       break;
     }
   }
-  buf = (char*) malloc(j+1);
+  buf = (char*) emalloc(j+1);
   while (true){
     while (pos < limit && is_url_query_escape_safe_char(*pos)) {
       buf[j] = *pos;
@@ -400,7 +412,7 @@ char *url_general_sanitize(const char* op1, int *len){
       case '>':  j+=4; break;
     }
   }
-  buf = (char*)malloc(sizeof(char)*j+1);
+  buf = (char*)emalloc(sizeof(char)*j+1);
   for (i = 0; i < j+1; i++){
     buf[i] = '\0';
   }
