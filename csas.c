@@ -821,7 +821,7 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
             case PHP_CSAS_SAFE_PCDATA:
                 return html_escape_sanitize(s, len);
             case PHP_CSAS_SAFE_ATTR_QUOT:
-                return html_escape_sanitize(s, len);
+                return html_unquoted_escape_sanitize(s, len);
             case PHP_CSAS_SAFE_ATTR_UNQUOT:
                 // TODO fix this
                 return html_escape_sanitize(s, len);
@@ -900,7 +900,6 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 
         //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
         //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
-
 
 
         // this also updates len to the appropriate value
