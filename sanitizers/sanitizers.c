@@ -163,7 +163,7 @@ char* html_unquoted_escape_sanitize(const char* op1, int *len){
       case 12: strcpy(buf+j,"&#12;"); j+=5; break;
       case ' ': strcpy(buf+j,"&#32;"); j+=5; break;
       case '`': strcpy(buf+j,"&#96;"); j+=5; break;
-      case '=': strcpy(buf+j), "&#61;"); j+=5; break;
+      case '=': strcpy(buf+j, "&#61;"); j+=5; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
       case '"': strcpy(buf+j,"&quot;"); j+=6; break;
