@@ -248,6 +248,7 @@ char* javascript_escape_sanitize(const char* op1, int *len)
   /*Fill in new string*/
   pos = op1;
   buf = (char*) malloc(j+1);
+  j = 0;
   while (pos < limit) {
     const char* next_pos = pos;
     uint16_t code_unit = utf8_code_unit(&next_pos, limit);
@@ -323,8 +324,8 @@ char* url_query_escape_sanitize(const char* op1, int *len)
   }
 
   pos = op1;
-  j = 0;
   buf = (char*) malloc(j+1);
+  j = 0;
 
   while (pos < limit) {
       if (is_url_query_escape_safe_char(*pos)) {
