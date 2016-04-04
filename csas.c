@@ -47,6 +47,7 @@
 #include "htmlparser/htmlparser.h"
 #include "sanitizers/sanitizers.h"
 
+
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
 /* {{{ CSAS_ARG_INFO
@@ -134,6 +135,8 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func substr;
     php_func strtolower;
     php_func strtoupper;
+    // mysqli.query
+    php_func mysqli_result_fetch_assoc;
 } csas_origin_funcs;
 
 #define CSAS_O_FUNC(m) (csas_origin_funcs.m)
@@ -187,7 +190,7 @@ static uint php_csas_get_safety(zval *z) {
     return PHP_CSAS_GET_SAFETY_(z);
 }
 
-static void php_csas_mark_strings(zval *symbol_table, uint safety TSRMLS_DC) /* {{{ */ {
+static void php_csas_mark_strings(zval *symbol_table, uint safety, int alloc_new TSRMLS_DC) /* {{{ */ {
     zval **ppzval;
     HashTable *ht = Z_ARRVAL_P(symbol_table);
     HashPosition pos = {0};
@@ -199,9 +202,17 @@ static void php_csas_mark_strings(zval *symbol_table, uint safety TSRMLS_DC) /* 
             continue;
         }
         if (Z_TYPE_PP(ppzval) == IS_ARRAY) {
-            php_csas_mark_strings(*ppzval, safety TSRMLS_CC);
+            php_csas_mark_strings(*ppzval, safety, alloc_new TSRMLS_CC);
         } else if (IS_STRING == Z_TYPE_PP(ppzval)) {
-            Z_STRVAL_PP(ppzval) = erealloc(Z_STRVAL_PP(ppzval), Z_STRLEN_PP(ppzval) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            if (alloc_new) {
+                char *new_string = emalloc(Z_STRLEN_PP(ppzval) + 1 + PHP_CSAS_MAGIC_LENGTH);
+                memcpy(new_string, Z_STRVAL_PP(ppzval), Z_STRLEN_PP(ppzval));
+                new_string[Z_STRLEN_PP(ppzval)] = '\0';
+                Z_STRVAL_PP(ppzval) = new_string;
+            }
+            else {
+                Z_STRVAL_PP(ppzval) = erealloc(Z_STRVAL_PP(ppzval), Z_STRLEN_PP(ppzval) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            }
             php_csas_set_safety(*ppzval, safety);
         }
     }
@@ -2735,11 +2746,31 @@ static void php_csas_register_handlers(TSRMLS_D) /* {{{ */ {
 
 static void php_csas_override_func(char *name, uint len, php_func handler, php_func *stash TSRMLS_DC) /* {{{ */ {
     zend_function *func;
+
     if (zend_hash_find(CG(function_table), name, len, (void **)&func) == SUCCESS) {
         if (stash) {
             *stash = func->internal_function.handler;
         }
         func->internal_function.handler = handler;
+    }
+} /* }}} */
+
+static void php_csas_override_class_func(char *cname, uint clen, char *fname, uint flen, 
+        php_func handler, php_func *stash TSRMLS_DC) /* {{{ */ {
+    zend_class_entry **class;
+    zend_function *func;
+
+    // look up class
+    if (zend_hash_find(CG(class_table), cname, clen, (void **)&class) == SUCCESS) {
+        // look up function in class's function table
+        if (zend_hash_find(&((*class)->function_table), fname, flen, (void **)&func) == SUCCESS) {
+            // store original function so we can call it ourselves
+            if (stash) {
+                *stash = func->internal_function.handler;
+            }
+            // overwrite the function pointer
+            func->internal_function.handler = handler;
+        }
     }
 } /* }}} */
 
@@ -2778,11 +2809,27 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_func(f_strtoupper, sizeof(f_strtoupper), PHP_FN(csas_strtoupper), &CSAS_O_FUNC(strtoupper) TSRMLS_CC);
     php_csas_override_func(f_substr, sizeof(f_substr), PHP_FN(csas_substr), &CSAS_O_FUNC(substr) TSRMLS_CC);
 
+
+
+    php_csas_override_class_func("mysqli_result", 14, 
+            "fetch_assoc", 12, 
+            PHP_FN(csas_mysqli_result_fetch_assoc), &CSAS_O_FUNC(mysqli_result_fetch_assoc) TSRMLS_CC);
 } /* }}} */
 
 #ifdef COMPILE_DL_CSAS
 ZEND_GET_MODULE(csas)
 #endif
+
+/* {{{ proto array fetch_assoc(mysqli_result $res)
+ */
+PHP_FUNCTION(csas_mysqli_result_fetch_assoc) {
+    CSAS_O_FUNC(mysqli_result_fetch_assoc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
+}
+/* }}} */
 
 /* {{{ proto string strval(mixed $value)
  */
@@ -2916,7 +2963,7 @@ PHP_FUNCTION(csas_explode) {
     CSAS_O_FUNC(explode)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 
     if (IS_ARRAY == Z_TYPE_P(return_value) && zend_hash_num_elements(Z_ARRVAL_P(return_value))) {
-        php_csas_mark_strings(return_value, safety TSRMLS_CC);
+        php_csas_mark_strings(return_value, safety, 0 TSRMLS_CC);
     }
 }
 /* }}} */
@@ -3367,15 +3414,15 @@ PHP_RINIT_FUNCTION(csas)
     }
 
     if (PG(http_globals)[TRACK_VARS_POST] && zend_hash_num_elements(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_POST]))) {
-        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_POST], PHP_CSAS_UNSAFE TSRMLS_CC);
+        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_POST], PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
     }
 
     if (PG(http_globals)[TRACK_VARS_GET] && zend_hash_num_elements(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]))) {
-        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_GET], PHP_CSAS_UNSAFE TSRMLS_CC);
+        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_GET], PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
     }
 
     if (PG(http_globals)[TRACK_VARS_COOKIE] && zend_hash_num_elements(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_COOKIE]))) {
-        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_COOKIE], PHP_CSAS_UNSAFE TSRMLS_CC);
+        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_COOKIE], PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
     }
 
     return SUCCESS;

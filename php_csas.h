@@ -236,6 +236,8 @@ PHP_FUNCTION(csas_str_pad);
 PHP_FUNCTION(csas_strtolower);
 PHP_FUNCTION(csas_strtoupper);
 
+PHP_FUNCTION(csas_mysqli_result_fetch_assoc);
+
 typedef void (*php_func)(INTERNAL_FUNCTION_PARAMETERS);
 
 ZEND_BEGIN_MODULE_GLOBALS(csas)
