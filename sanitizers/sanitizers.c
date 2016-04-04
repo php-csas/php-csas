@@ -378,7 +378,7 @@ char *url_start_sanitize(const char* op1, int *len){
   if (*len >= 6 && strncmp(op1, "mailto:", 6) == 0) return op1;
 
   *len = 0;
-  return "";
+  return estrndup("", 0);
 }
 
 char *url_general_sanitize(const char* op1, int *len){
