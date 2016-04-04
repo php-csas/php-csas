@@ -910,7 +910,6 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
         //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
 
-
         // this also updates len to the appropriate value
         char *s_safe = sanitize_for_context(s, safety, &len);
 
@@ -918,20 +917,24 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         Z_STRLEN(op1_safe) = len;
         Z_STRVAL(op1_safe) = s_safe;
 
-        if (CSAS_OP1_TYPE(opline) != IS_CONST) {
-            opline->op1.literal = emalloc(sizeof(zend_literal));
-        }
-
-        // set op1 to be a fake "constant" with our new zval
-        CSAS_OP1_TYPE(opline) = IS_CONST;
-        opline->op1.literal->constant = op1_safe;
-
-        // at this point op1 can be safely gotten as a string
-
+        // print variable 
+        if (len > 0)  zend_print_variable(&op1_safe);
+        // and update context
         htmlparser_update_context(htmlparser, s_safe, len);
+
+        if (s_safe != s) {
+            // if sanitizer had to allocate new memory, free it now
+            efree(s_safe);
+        }
     }
 
-    return ZEND_USER_OPCODE_DISPATCH;
+    if (opline->opcode != ZEND_ECHO) {
+        // print statement must return value
+        ZVAL_LONG(opline->result.zv, 1);
+    }
+
+    execute_data->opline++;
+    return ZEND_USER_OPCODE_CONTINUE;
 } /* }}} */
 
 static int php_csas_include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
