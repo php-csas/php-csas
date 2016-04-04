@@ -3428,6 +3428,10 @@ PHP_RINIT_FUNCTION(csas)
         php_csas_mark_strings(PG(http_globals)[TRACK_VARS_COOKIE], PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
     }
 
+    if (PG(http_globals)[TRACK_VARS_SERVER] && zend_hash_num_elements(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_SERVER]))) {
+        php_csas_mark_strings(PG(http_globals)[TRACK_VARS_SERVER], PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
+    }
+
     return SUCCESS;
 }
 /* }}} */
