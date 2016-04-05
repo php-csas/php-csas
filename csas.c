@@ -929,8 +929,9 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     }
 
     if (opline->opcode != ZEND_ECHO) {
+        // TODO: check opline->result_type and ensure we're storing this correctly
         // print statement must return value
-        ZVAL_LONG(opline->result.zv, 1);
+        ZVAL_LONG(&(*(temp_variable *)((char *) execute_data->Ts + opline->result.var)).tmp_var, 1);
     }
 
     execute_data->opline++;
