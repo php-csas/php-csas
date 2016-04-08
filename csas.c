@@ -121,6 +121,7 @@ zend_module_entry csas_module_entry = {
 /* }}} */
 
 static struct csas_overridden_fucs /* {{{ */ {
+    // string functions - from php_taint
     php_func strval;
     php_func sprintf;
     php_func vsprintf;
@@ -135,8 +136,14 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func substr;
     php_func strtolower;
     php_func strtoupper;
-    // mysqli.query
+
+    // mysqli_result functions
     php_func mysqli_result_fetch_assoc;
+    // TODO: a whole lote more input functions (see Trello)
+
+    // output functions
+    php_func printf;
+    php_func vprintf;
 } csas_origin_funcs;
 
 #define CSAS_O_FUNC(m) (csas_origin_funcs.m)
@@ -2793,8 +2800,10 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_str_pad[]     = "str_pad";
     char f_vsprintf[]    = "vsprintf";
     char f_str_replace[] = "str_replace";
-    char f_strtolower[] = "strtolower";
-    char f_strtoupper[] = "strtoupper";
+    char f_strtolower[]  = "strtolower";
+    char f_strtoupper[]  = "strtoupper";
+    char f_printf[]      = "printf";
+    char f_vprintf[]     = "vprintf";
 
     php_csas_override_func(f_strval, sizeof(f_strval), PHP_FN(csas_strval), &CSAS_O_FUNC(strval) TSRMLS_CC);
     php_csas_override_func(f_sprintf, sizeof(f_sprintf), PHP_FN(csas_sprintf), &CSAS_O_FUNC(sprintf) TSRMLS_CC);
@@ -2813,6 +2822,9 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_func(f_strtoupper, sizeof(f_strtoupper), PHP_FN(csas_strtoupper), &CSAS_O_FUNC(strtoupper) TSRMLS_CC);
     php_csas_override_func(f_substr, sizeof(f_substr), PHP_FN(csas_substr), &CSAS_O_FUNC(substr) TSRMLS_CC);
 
+    php_csas_override_func(f_printf, sizeof(f_printf), PHP_FN(csas_printf), &CSAS_O_FUNC(printf) TSRMLS_CC);
+    php_csas_override_func(f_vprintf, sizeof(f_vprintf), PHP_FN(csas_vprintf), &CSAS_O_FUNC(vprintf) TSRMLS_CC);
+
 
 
     php_csas_override_class_func("mysqli_result", 14, 
@@ -2823,6 +2835,20 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
 #ifdef COMPILE_DL_CSAS
 ZEND_GET_MODULE(csas)
 #endif
+
+/* {{{ proto int printf(string $format [, mixed $args [, mixed $... ]])
+ */
+PHP_FUNCTION(csas_printf) {
+    CSAS_O_FUNC(printf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+/* }}} */
+
+/* {{{ proto int vprintf(string $format, array $args)
+ */
+PHP_FUNCTION(csas_vprintf) {
+    CSAS_O_FUNC(vprintf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+/* }}} */
 
 /* {{{ proto array fetch_assoc(mysqli_result $res)
  */
