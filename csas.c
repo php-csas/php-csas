@@ -856,6 +856,16 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
     return "";
 }
 
+static void php_csas_safe_write(char *s, int len, uint safety TSRMLS_DC) {
+    char *s_safe = sanitize_for_context(s, safety, &len);
+    if (len > 0) PHPWRITE(s_safe, len);
+    htmlparser_update_context(htmlparser, s_safe, len);
+    if (s_safe != s) {
+        // if sanitizer had to allocate new memory, free it now
+        efree(s_safe);
+    }
+}
+
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     if (htmlparser == NULL) {
         htmlparser = htmlparser_init(CSAS_UNUSED, 0);
@@ -909,30 +919,13 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         }
 
         // the string value of the output
-        zval op1_safe;
         char* s = cast_zval_to_string(op1);
         int len = Z_STRLEN_P(op1);
-        int ctx = htmlparser_get_context(htmlparser);
 
         //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
         //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
 
-        // this also updates len to the appropriate value
-        char *s_safe = sanitize_for_context(s, safety, &len);
-
-        Z_TYPE(op1_safe) = IS_STRING;
-        Z_STRLEN(op1_safe) = len;
-        Z_STRVAL(op1_safe) = s_safe;
-
-        // print variable 
-        if (len > 0)  zend_print_variable(&op1_safe);
-        // and update context
-        htmlparser_update_context(htmlparser, s_safe, len);
-
-        if (s_safe != s) {
-            // if sanitizer had to allocate new memory, free it now
-            efree(s_safe);
-        }
+        php_csas_safe_write(s, len, safety TSRMLS_CC);
     }
 
     if (opline->opcode != ZEND_ECHO) {
@@ -944,6 +937,7 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     execute_data->opline++;
     return ZEND_USER_OPCODE_CONTINUE;
 } /* }}} */
+
 
 static int php_csas_include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zend_op *opline = execute_data->opline;
@@ -2846,6 +2840,17 @@ PHP_FUNCTION(csas_printf) {
 /* {{{ proto int vprintf(string $format, array $args)
  */
 PHP_FUNCTION(csas_vprintf) {
+/*
+    char *result;
+    int len, rlen;
+
+    if ((result=php_formatted_print(ht, &len, 0, 0 TSRMLS_CC))==NULL) {
+        RETURN_FALSE;
+    }
+    rlen = PHPWRITE(result, len);
+    efree(result);
+    RETURN_LONG(rlen);
+    */
     CSAS_O_FUNC(vprintf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
