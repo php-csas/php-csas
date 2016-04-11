@@ -144,6 +144,20 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func strtolower;
     php_func strtoupper;
 
+    // input functions
+    php_func fgetc;
+    php_func fgetcsv;
+    php_func fgets;
+    php_func fgetss;
+    php_func file_get_contents;
+    php_func file;
+    php_func fread;
+    php_func fscanf;
+    php_func socket_read;
+    php_func socket_recv;
+    php_func socket_recvfrom;
+    php_func getenv;
+
     // mysqli_result functions
     php_func mysqli_result_fetch_assoc;
     // TODO: a whole lote more input functions (see Trello)
@@ -2760,6 +2774,20 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_printf[]      = "printf";
     char f_vprintf[]     = "vprintf";
 
+    char f_fgetc[] = "fgetc";
+    char f_fgetcsv[] = "fgetcsv";
+    char f_fgets[] = "fgets";
+    char f_fgetss[] = "fgetss";
+    char f_file_get_contents[] = "file_get_contents";
+    char f_file[] = "file";
+    char f_fread[] = "fread";
+    char f_fscanf[] = "fscanf";
+    char f_socket_read[] = "socket_read";
+    char f_socket_recv[] = "socket_recv";
+    char f_socket_recvfrom[] = "socket_recvfrom";
+    char f_getenv[] = "getenv";
+
+
     php_csas_override_func(f_strval, sizeof(f_strval), PHP_FN(csas_strval), &CSAS_O_FUNC(strval) TSRMLS_CC);
     php_csas_override_func(f_sprintf, sizeof(f_sprintf), PHP_FN(csas_sprintf), &CSAS_O_FUNC(sprintf) TSRMLS_CC);
     php_csas_override_func(f_vsprintf, sizeof(f_vsprintf), PHP_FN(csas_vsprintf), &CSAS_O_FUNC(vsprintf) TSRMLS_CC);
@@ -2780,12 +2808,60 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_func(f_printf, sizeof(f_printf), PHP_FN(csas_printf), &CSAS_O_FUNC(printf) TSRMLS_CC);
     php_csas_override_func(f_vprintf, sizeof(f_vprintf), PHP_FN(csas_vprintf), &CSAS_O_FUNC(vprintf) TSRMLS_CC);
 
-
+    php_csas_override_func(f_fgetc, sizeof(f_fgetc), PHP_FN(csas_fgetc), &CSAS_O_FUNC(fgetc) TSRMLS_CC);
+    php_csas_override_func(f_fgetcsv, sizeof(f_fgetcsv), PHP_FN(csas_fgetcsv), &CSAS_O_FUNC(fgetcsv) TSRMLS_CC);
+    php_csas_override_func(f_fgets, sizeof(f_fgets), PHP_FN(csas_fgets), &CSAS_O_FUNC(fgets) TSRMLS_CC);
+    php_csas_override_func(f_fgetss, sizeof(f_fgetss), PHP_FN(csas_fgetss), &CSAS_O_FUNC(fgetss) TSRMLS_CC);
+    php_csas_override_func(f_file_get_contents, sizeof(f_file_get_contents), PHP_FN(csas_file_get_contents), &CSAS_O_FUNC(file_get_contents) TSRMLS_CC);
+    php_csas_override_func(f_file, sizeof(f_file), PHP_FN(csas_file), &CSAS_O_FUNC(file) TSRMLS_CC);
+    php_csas_override_func(f_fread, sizeof(f_fread), PHP_FN(csas_fread), &CSAS_O_FUNC(fread) TSRMLS_CC);
+    php_csas_override_func(f_fscanf, sizeof(f_fscanf), PHP_FN(csas_fscanf), &CSAS_O_FUNC(fscanf) TSRMLS_CC);
+    php_csas_override_func(f_socket_read, sizeof(f_socket_read), PHP_FN(csas_socket_read), &CSAS_O_FUNC(socket_read) TSRMLS_CC);
+    php_csas_override_func(f_socket_recv, sizeof(f_socket_recv), PHP_FN(csas_socket_recv), &CSAS_O_FUNC(socket_recv) TSRMLS_CC);
+    php_csas_override_func(f_socket_recvfrom, sizeof(f_socket_recvfrom), PHP_FN(csas_socket_recvfrom), &CSAS_O_FUNC(socket_recvfrom) TSRMLS_CC);
+    php_csas_override_func(f_getenv, sizeof(f_getenv), PHP_FN(csas_getenv), &CSAS_O_FUNC(getenv) TSRMLS_CC);
 
     php_csas_override_class_func("mysqli_result", 14, 
             "fetch_assoc", 12, 
             PHP_FN(csas_mysqli_result_fetch_assoc), &CSAS_O_FUNC(mysqli_result_fetch_assoc) TSRMLS_CC);
 } /* }}} */
+
+PHP_FUNCTION(csas_fgetc) {
+    CSAS_O_FUNC(fgetc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fgetcsv) {
+    CSAS_O_FUNC(fgetcsv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fgets) {
+    CSAS_O_FUNC(fgets)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fgetss) {
+    CSAS_O_FUNC(fgetss)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_file_get_contents) {
+    CSAS_O_FUNC(file_get_contents)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_file) {
+    CSAS_O_FUNC(file)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fread) {
+    CSAS_O_FUNC(fread)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fscanf) {
+    CSAS_O_FUNC(fscanf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_socket_read) {
+    CSAS_O_FUNC(socket_read)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_socket_recv) {
+    CSAS_O_FUNC(socket_recv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_socket_recvfrom) {
+    CSAS_O_FUNC(socket_recvfrom)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_getenv) {
+    CSAS_O_FUNC(getenv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
 
 #ifdef COMPILE_DL_CSAS
 ZEND_GET_MODULE(csas)
