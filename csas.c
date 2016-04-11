@@ -2828,30 +2828,55 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
 
 PHP_FUNCTION(csas_fgetc) {
     CSAS_O_FUNC(fgetc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_fgetcsv) {
     CSAS_O_FUNC(fgetcsv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 PHP_FUNCTION(csas_fgets) {
     CSAS_O_FUNC(fgets)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_fgetss) {
     CSAS_O_FUNC(fgetss)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_SAFE_PCDATA);
+    }
 }
 PHP_FUNCTION(csas_file_get_contents) {
     CSAS_O_FUNC(file_get_contents)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_file) {
     CSAS_O_FUNC(file)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 PHP_FUNCTION(csas_fread) {
     CSAS_O_FUNC(fread)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_fscanf) {
     CSAS_O_FUNC(fscanf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 PHP_FUNCTION(csas_socket_read) {
     CSAS_O_FUNC(socket_read)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_socket_recv) {
     CSAS_O_FUNC(socket_recv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
@@ -2861,6 +2886,10 @@ PHP_FUNCTION(csas_socket_recvfrom) {
 }
 PHP_FUNCTION(csas_getenv) {
     CSAS_O_FUNC(getenv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
 }
 
 #ifdef COMPILE_DL_CSAS
