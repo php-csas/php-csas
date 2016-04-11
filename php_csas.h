@@ -218,7 +218,8 @@ PHP_MINFO_FUNCTION(csas);
 
 PHP_FUNCTION(csas);
 PHP_FUNCTION(uncsas);
-PHP_FUNCTION(html_safe);
+PHP_FUNCTION(csas_mark_safe);
+PHP_FUNCTION(csas_mark_unsafe);
 PHP_FUNCTION(is_csased);
 
 PHP_FUNCTION(csas_strval);

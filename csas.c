@@ -46,6 +46,7 @@
 #include "php_csas.h"
 #include "htmlparser/htmlparser.h"
 #include "sanitizers/sanitizers.h"
+#include "formatted_csas_print.c"
 
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
@@ -62,7 +63,12 @@ ZEND_BEGIN_ARG_INFO_EX(uncsas_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(1, ...)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(html_safe_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(csas_mark_safe_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(1, string)
+    ZEND_ARG_INFO(1, ...)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(csas_mark_unsafe_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(1, string)
     ZEND_ARG_INFO(1, ...)
 ZEND_END_ARG_INFO()
@@ -77,7 +83,8 @@ ZEND_END_ARG_INFO()
 zend_function_entry csas_functions[] = {
     PHP_FE(csas, csas_arginfo)
     PHP_FE(uncsas, uncsas_arginfo)
-    PHP_FE(html_safe, html_safe_arginfo)
+    PHP_FE(csas_mark_safe, csas_mark_safe_arginfo)
+    PHP_FE(csas_mark_unsafe, csas_mark_unsafe_arginfo)
     PHP_FE(is_csased, is_csased_arginfo)
     {NULL, NULL, NULL}
 };
@@ -151,7 +158,7 @@ static struct csas_overridden_fucs /* {{{ */ {
 
 typedef enum CsasContext CsasContext;
 
-htmlparser_ctx *htmlparser;
+htmlparser_ctx *htmlparser = NULL;
 
 static htmlparser_ctx *htmlparser_init(int in_tag, CsasContext cc) /* {{{ */ {
     htmlparser_ctx *htmlparser_ = htmlparser_new();
@@ -856,21 +863,24 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
     return "";
 }
 
-static void php_csas_safe_write(char *s, int len, uint safety TSRMLS_DC) {
+static int php_csas_safe_write(char *s, int len, uint safety TSRMLS_DC) {
+    int rval = 0;
     char *s_safe = sanitize_for_context(s, safety, &len);
-    if (len > 0) PHPWRITE(s_safe, len);
-    htmlparser_update_context(htmlparser, s_safe, len);
+
+    if (len > 0)  {
+        rval = PHPWRITE(s_safe, len);
+        htmlparser_update_context(htmlparser, s_safe, len);
+    }
+
     if (s_safe != s) {
         // if sanitizer had to allocate new memory, free it now
         efree(s_safe);
     }
+
+    return rval;
 }
 
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
-    if (htmlparser == NULL) {
-        htmlparser = htmlparser_init(CSAS_UNUSED, 0);
-    }
-
     zend_op *opline = execute_data->opline;
     zval *op1 = NULL;
     csas_free_op free_op1 = {0};
@@ -2259,55 +2269,6 @@ static void php_csas_fcall_check(ZEND_OPCODE_HANDLER_ARGS, zend_op *opline, char
                 break;
             }
 
-            if (strncmp("printf", fname, len) == 0) {
-                if (arg_count > 1) {
-                    zval *el;
-                    uint i;
-                    for (i=0;i<arg_count;i++) {
-                        el = *((zval **) (p - (arg_count - i)));
-                        if (el && IS_STRING == Z_TYPE_P(el) && Z_STRLEN_P(el) && php_csas_get_safety(el)!=PHP_CSAS_SAFE_ALL) {
-                            php_csas_error(NULL TSRMLS_CC, "%dth argument contains data that might be csased", i + 1);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-
-            if (strncmp("vprintf", fname, len) == 0) {
-                if (arg_count > 1) {
-                    HashTable *ht;
-                    zval **ppzval, *el = *((zval **) ( p - (arg_count - 1)));
-                    if (!el || IS_ARRAY != Z_TYPE_P(el) || zend_hash_num_elements(Z_ARRVAL_P(el))) {
-                        break;
-                    }
-
-                    ht = Z_ARRVAL_P(el);
-                    for(zend_hash_internal_pointer_reset(ht);
-                            zend_hash_has_more_elements(ht) == SUCCESS;
-                            zend_hash_move_forward(ht)) {
-                        if (zend_hash_get_current_data(ht, (void**)&ppzval) == FAILURE) {
-                            continue;
-                        }
-
-                        if (IS_STRING == Z_TYPE_PP(ppzval) && Z_STRLEN_PP(ppzval) && php_csas_get_safety(*ppzval)!=PHP_CSAS_SAFE_ALL) {
-                            char *key;
-                            long idx;
-                            switch (zend_hash_get_current_key(ht, &key, &idx, 0)) {
-                                case HASH_KEY_IS_STRING:
-                                    php_csas_error(NULL TSRMLS_CC, "Second argument contains data(index:%s) that might be csased", key);
-                                    break;
-                                case HASH_KEY_IS_LONG:
-                                    php_csas_error(NULL TSRMLS_CC, "Second argument contains data(index:%ld) that might be csased", idx);
-                                    break;
-                            }
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-
             if (strncmp("file_put_contents", fname, len) == 0
                    || strncmp("fwrite", fname, len) == 0) {
                 if (arg_count > 1) {
@@ -2830,29 +2791,103 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
 ZEND_GET_MODULE(csas)
 #endif
 
-/* {{{ proto int printf(string $format [, mixed $args [, mixed $... ]])
- */
+/* {{{ proto int printf(string format [, mixed arg1 [, mixed ...]])
+   Output a formatted string */
 PHP_FUNCTION(csas_printf) {
-    CSAS_O_FUNC(printf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-}
-/* }}} */
-
-/* {{{ proto int vprintf(string $format, array $args)
- */
-PHP_FUNCTION(csas_vprintf) {
-/*
     char *result;
     int len, rlen;
+    zval ***args;
+    int i, argc;
+    uint safety = PHP_CSAS_SAFE_ALL;
+
+    argc = ZEND_NUM_ARGS();
+
+    if (argc < 1) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    args = (zval ***)safe_emalloc(argc, sizeof(zval *), 0);
+    if (zend_get_parameters_array_ex(argc, args) == FAILURE) {
+        efree(args);
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    for (i=0; i<argc; i++) {
+        if (args[i] && IS_STRING == Z_TYPE_PP(args[i])) {
+            safety &= php_csas_get_safety(*args[i]);
+            /* we can quit if it's already completely unsafe */
+            if (safety == PHP_CSAS_UNSAFE) break;
+        }
+    }
+    efree(args);
 
     if ((result=php_formatted_print(ht, &len, 0, 0 TSRMLS_CC))==NULL) {
         RETURN_FALSE;
     }
-    rlen = PHPWRITE(result, len);
+    rlen = php_csas_safe_write(result, len, safety TSRMLS_CC);
     efree(result);
     RETURN_LONG(rlen);
-    */
-    CSAS_O_FUNC(vprintf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
+/* }}} */
+
+/* {{{ proto int vprintf(string format, array args)
+   Output a formatted string */
+PHP_FUNCTION(csas_vprintf) {
+    char *result;
+    int len, rlen;
+
+    zval *format, *args;
+    int argc;
+    uint safety = PHP_CSAS_SAFE_ALL;
+
+    argc = ZEND_NUM_ARGS();
+
+    if (argc < 1) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    if (zend_parse_parameters(argc TSRMLS_CC, "za", &format, &args) == FAILURE) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    do {
+        if (IS_STRING == Z_TYPE_P(format)) {
+            safety &= php_csas_get_safety(format);
+            /* we can quit if it's already completely unsafe */
+            if (safety == PHP_CSAS_UNSAFE) break;
+        }
+
+        if (IS_ARRAY == Z_TYPE_P(args)) {
+            HashTable *ht = Z_ARRVAL_P(args);
+            zval **ppzval;
+            for(zend_hash_internal_pointer_reset(ht);
+                    zend_hash_has_more_elements(ht) == SUCCESS;
+                    zend_hash_move_forward(ht)) {
+                if (zend_hash_get_current_data(ht, (void**)&ppzval) == FAILURE) {
+                    continue;
+                }
+                if (IS_STRING == Z_TYPE_PP(ppzval) && Z_STRLEN_PP(ppzval)) {
+                    safety &= php_csas_get_safety(*ppzval);
+                    if (safety == PHP_CSAS_UNSAFE) break;
+                }
+            }
+            break;
+        }
+    } while (0);
+
+    if ((result=php_formatted_print(ht, &len, 1, 0 TSRMLS_CC))==NULL) {
+        RETURN_FALSE;
+    }
+
+    rlen = php_csas_safe_write(result, len, safety TSRMLS_CC);
+    efree(result);
+    RETURN_LONG(rlen);
+}
+
 /* }}} */
 
 /* {{{ proto array fetch_assoc(mysqli_result $res)
@@ -3359,9 +3394,9 @@ PHP_FUNCTION(uncsas)
 }
 /* }}} */
 
-/* {{{ proto bool html_safe(string $str[, string ...])
+/* {{{ proto bool csas_mark_unsafe(string $str[, string ...])
  */
-PHP_FUNCTION(html_safe)
+PHP_FUNCTION(csas_mark_unsafe)
 {
     zval ***args;
     int argc;
@@ -3381,7 +3416,46 @@ PHP_FUNCTION(html_safe)
 
     for (i=0; i<argc; i++) {
         if (IS_STRING == Z_TYPE_PP(args[i])) {
-            php_csas_set_safety(*args[i], PHP_CSAS_SAFE_PCDATA);
+            if (!PHP_CSAS_IS_MARKED(*args[i])) {
+                Z_STRVAL_P(*args[i]) = erealloc(Z_STRVAL_P(*args[i]), Z_STRLEN_P(*args[i]) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            }
+            php_csas_set_safety(*args[i], PHP_CSAS_UNSAFE);
+        }
+    }
+
+    efree(args);
+
+    RETURN_TRUE;
+}
+/* }}} */
+/* }}} */
+
+/* {{{ proto bool csas_mark_safe(string $str[, string ...])
+ */
+PHP_FUNCTION(csas_mark_safe)
+{
+    zval ***args;
+    int argc;
+    int i;
+
+    if (!CSAS_G(enable)) {
+        RETURN_TRUE;
+    }
+
+    argc = ZEND_NUM_ARGS();
+    args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
+
+    if (ZEND_NUM_ARGS() == 0 || zend_get_parameters_array_ex(argc, args) == FAILURE) {
+        efree(args);
+        return;
+    }
+
+    for (i=0; i<argc; i++) {
+        if (IS_STRING == Z_TYPE_PP(args[i])) {
+            if (!PHP_CSAS_IS_MARKED(*args[i])) {
+                Z_STRVAL_P(*args[i]) = erealloc(Z_STRVAL_P(*args[i]), Z_STRLEN_P(*args[i]) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            }
+            php_csas_set_safety(*args[i], PHP_CSAS_SAFE_ALL);
         }
     }
 
@@ -3443,7 +3517,10 @@ PHP_MSHUTDOWN_FUNCTION(csas)
  */
 PHP_RINIT_FUNCTION(csas)
 {
-    htmlparser = NULL;
+    if (htmlparser == NULL) {
+        htmlparser = htmlparser_init(CSAS_UNUSED, 0);
+    }
+
     if (SG(sapi_started) || !CSAS_G(enable)) {
         return SUCCESS;
     }
