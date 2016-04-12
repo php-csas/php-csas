@@ -124,3 +124,62 @@ PHP_FUNCTION(pre_escape_sanitizer){
   php_printf("%s\n", op1);
   free(op1);
 }
+
+PHP_FUNCTION(csas_get_safety){
+  uint safety;
+  if (ZEND_NUM_ARGS() != 1 || zend_get_parameters_ex(1, &arg) == FAILURE) {
+        WRONG_PARAM_COUNT;
+  }
+  Z_LVAL_P(return_value) = php_csas_get_safety(arg);
+  Z_TYPE_P(return_value) = IS_LONG;
+}
+
+PHP_FUNCTION(csas_make_unsafe){
+  uint safety;
+  zval zv;
+  zval type;
+  unsigned int safety = 0;
+  if (ZEND_NUM_ARGS() == 1){
+      if (zend_get_parameters_ex(1, &zv) == FAILURE) {
+        WRONG_PARAM_COUNT;
+    }
+  }
+  else if (ZEND_NUM_ARGS() == 2){
+    if (zend_get_parameters_ex(2, &zv, &type)==FAILURE){
+      WRONG_PARAM_COUNT;
+    }
+    if (Z_TYPE_P(type) == IS_STRING){
+      if (strcmp(Z_STRVAL_P(type), "UNSAFE") == 0){
+        safety = PHP_CSAS_UNSAFE;
+      }
+      if (strcmp(Z_STRVAL_P(type), "PCDATA") == 0){
+        safety = PHP_CSAS_PCDATA;
+      }
+      if (strcmp(Z_STRVAL_P(type), "ATTR_QUOT") == 0){
+        safety = PHP_CSAS_ATTR_QUOT;
+      }
+      if (strcmp(Z_STRVAL_P(type), "ATTR_UNQUOT") == 0){
+        safety = PHP_CSAS_ATTR_UNQUOT;
+      }
+      if (strcmp(Z_STRVAL_P(type), "URL_START") == 0){
+        safety = PHP_CSAS_UTL_START;
+      }
+      if (strcmp(Z_STRVAL_P(type), "URL_QUERY") == 0){
+        safety = PHP_CSAS_UTL_QUERY;
+      }
+      if (strcmp(Z_STRVAL_P(type), "URL_GENERAL") == 0){
+        safety = PHP_CSAS_URL_GENERAL;
+      }
+      if (strcmp(Z_STRVAL_P(type), "SAFE") == 0){
+        safety = PHP_CSAS_SAFE_ALL;
+      }
+    }
+    if (Z_TYPE_P(type) == IS_LONG){
+      safety = (unsigned int) Z_LVAL_P(type);
+    }
+  }
+  else{
+    WRONG_PARAM_COUNT;
+  }
+  php_csas_set_safety(zv, safety); /*Default to html unquoted*/
+}
