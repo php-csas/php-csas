@@ -2619,7 +2619,7 @@ static int php_csas_send_ref_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 
     if (!op1 || *op1 == &EG(error_zval) || *op1 == &EG(uninitialized_zval) || IS_STRING != Z_TYPE_PP(op1) 
              || PZVAL_IS_REF(*op1) || Z_REFCOUNT_PP(op1) < 2 || !Z_STRLEN_PP(op1) 
-             || PHP_CSAS_IS_SAFE_FOR(*op1, PHP_CSAS_SAFE_ALL)) {
+             || php_csas_get_safety(*op1) == PHP_CSAS_SAFE_ALL) {
         return ZEND_USER_OPCODE_DISPATCH;
     }
 
