@@ -2870,13 +2870,13 @@ PHP_FUNCTION(csas_file) {
 }
 PHP_FUNCTION(csas_fread) {
     CSAS_O_FUNC(fread)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    // mark return value as unsafe
     if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
         Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
         php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
     }
 }
 PHP_FUNCTION(csas_fscanf) {
-
     zval ***args;
     int i, argc;
 
@@ -2896,6 +2896,7 @@ PHP_FUNCTION(csas_fscanf) {
 
     CSAS_O_FUNC(fscanf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 
+    // mark string arguments from 2 on as unsafe
     for (i=2; i<argc; i++) {
         if (args[i] && IS_STRING == Z_TYPE_PP(args[i])) {
             Z_STRVAL_P(*(args[i])) = erealloc(Z_STRVAL_P(*(args[i])), Z_STRLEN_P(*(args[i])) + 1 + PHP_CSAS_MAGIC_LENGTH);
@@ -2913,10 +2914,34 @@ PHP_FUNCTION(csas_socket_read) {
     }
 }
 PHP_FUNCTION(csas_socket_recv) {
+    zval *socket, *buf, *len, *flags;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zzzz", &socket, &buf, &len, &flags) == FAILURE) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
     CSAS_O_FUNC(socket_recv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (buf && Z_TYPE_P(buf) == IS_STRING) {
+        Z_STRVAL_P(buf) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(buf, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_socket_recvfrom) {
+    zval *socket, *buf, *len, *flags, *name, *port;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zzzzz|z", &socket, &buf, &len, &flags, &name, &port) == FAILURE) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
     CSAS_O_FUNC(socket_recvfrom)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (buf && Z_TYPE_P(buf) == IS_STRING) {
+        Z_STRVAL_P(buf) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(buf, PHP_CSAS_UNSAFE);
+    }
 }
 PHP_FUNCTION(csas_getenv) {
     CSAS_O_FUNC(getenv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
