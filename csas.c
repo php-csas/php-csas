@@ -144,6 +144,12 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func strtolower;
     php_func strtoupper;
 
+    // output functions
+    php_func printf;
+    php_func vprintf;
+    php_func readfile;
+    php_func fpassthru;
+
     // input functions
     php_func fgetc;
     php_func fgetcsv;
@@ -178,9 +184,6 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func pdo_fetch_column;
     php_func pdo_fetch_object;
 
-    // output functions
-    php_func printf;
-    php_func vprintf;
 
 } csas_origin_funcs;
 
@@ -2796,8 +2799,11 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_str_replace[] = "str_replace";
     char f_strtolower[]  = "strtolower";
     char f_strtoupper[]  = "strtoupper";
+
     char f_printf[]      = "printf";
     char f_vprintf[]     = "vprintf";
+    char f_readfile[]    = "readfile";
+    char f_fpassthru[]   = "fpassthru";
 
     char f_fgetc[] = "fgetc";
     char f_fgetcsv[] = "fgetcsv";
@@ -2850,6 +2856,8 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
 
     php_csas_override_func(f_printf, sizeof(f_printf), PHP_FN(csas_printf), &CSAS_O_FUNC(printf) TSRMLS_CC);
     php_csas_override_func(f_vprintf, sizeof(f_vprintf), PHP_FN(csas_vprintf), &CSAS_O_FUNC(vprintf) TSRMLS_CC);
+    php_csas_override_func(f_readfile, sizeof(f_readfile), PHP_FN(csas_readfile), &CSAS_O_FUNC(readfile) TSRMLS_CC);
+    php_csas_override_func(f_fpassthru, sizeof(f_fpassthru), PHP_FN(csas_fpassthru), &CSAS_O_FUNC(fpassthru) TSRMLS_CC);
 
     php_csas_override_func(f_fgetc, sizeof(f_fgetc), PHP_FN(csas_fgetc), &CSAS_O_FUNC(fgetc) TSRMLS_CC);
     php_csas_override_func(f_fgetcsv, sizeof(f_fgetcsv), PHP_FN(csas_fgetcsv), &CSAS_O_FUNC(fgetcsv) TSRMLS_CC);
