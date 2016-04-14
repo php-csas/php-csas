@@ -3224,6 +3224,10 @@ PHP_FUNCTION(csas_mysqli_fetch_all) {
  */
 PHP_FUNCTION(csas_mysqli_fetch_object) {
     CSAS_O_FUNC(mysqli_fetch_object)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_OBJECT) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
 }
 /* }}} */
 
@@ -3275,6 +3279,9 @@ PHP_FUNCTION(csas_pdo_fetch_column) {
  */
 PHP_FUNCTION(csas_pdo_fetch_object) {
     CSAS_O_FUNC(pdo_fetch_object)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (return_value && Z_TYPE_P(return_value) == IS_OBJECT) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
 }
 /* }}} */
 
