@@ -229,8 +229,16 @@ static uint php_csas_get_safety(zval *z) {
 
 static void php_csas_mark_strings(zval *symbol_table, uint safety, int alloc_new TSRMLS_DC) /* {{{ */ {
     zval **ppzval;
-    HashTable *ht = Z_ARRVAL_P(symbol_table);
     HashPosition pos = {0};
+
+    HashTable *ht;
+
+    if (Z_TYPE_P(symbol_table) == IS_ARRAY) {
+        ht = Z_ARRVAL_P(symbol_table);
+    }
+    else {
+        ht = Z_OBJPROP_P(symbol_table);
+    }
 
     for(zend_hash_internal_pointer_reset_ex(ht, &pos);
             zend_hash_has_more_elements_ex(ht, &pos) == SUCCESS;
@@ -238,7 +246,7 @@ static void php_csas_mark_strings(zval *symbol_table, uint safety, int alloc_new
         if (zend_hash_get_current_data_ex(ht, (void**)&ppzval, &pos) == FAILURE) {
             continue;
         }
-        if (Z_TYPE_PP(ppzval) == IS_ARRAY) {
+        if (Z_TYPE_PP(ppzval) == IS_ARRAY || Z_TYPE_PP(ppzval) == IS_OBJECT) {
             php_csas_mark_strings(*ppzval, safety, alloc_new TSRMLS_CC);
         } else if (IS_STRING == Z_TYPE_PP(ppzval)) {
             if (alloc_new) {
@@ -3131,6 +3139,10 @@ PHP_FUNCTION(csas_mysqli_result_fetch_all) {
  */
 PHP_FUNCTION(csas_mysqli_result_fetch_object) {
     CSAS_O_FUNC(mysqli_result_fetch_object)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_OBJECT) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
 }
 /* }}} */
 
