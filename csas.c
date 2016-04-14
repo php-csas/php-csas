@@ -2836,6 +2836,10 @@ PHP_FUNCTION(csas_fgetc) {
 }
 PHP_FUNCTION(csas_fgetcsv) {
     CSAS_O_FUNC(fgetcsv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
+    }
 }
 PHP_FUNCTION(csas_fgets) {
     CSAS_O_FUNC(fgets)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
@@ -2860,6 +2864,9 @@ PHP_FUNCTION(csas_file_get_contents) {
 }
 PHP_FUNCTION(csas_file) {
     CSAS_O_FUNC(file)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 0 TSRMLS_CC);
+    }
 }
 PHP_FUNCTION(csas_fread) {
     CSAS_O_FUNC(fread)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
@@ -2869,7 +2876,34 @@ PHP_FUNCTION(csas_fread) {
     }
 }
 PHP_FUNCTION(csas_fscanf) {
+
+    zval ***args;
+    int i, argc;
+
+    argc = ZEND_NUM_ARGS();
+
+    if (argc < 1) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    args = (zval ***)safe_emalloc(argc, sizeof(zval *), 0);
+    if (zend_get_parameters_array_ex(argc, args) == FAILURE) {
+        efree(args);
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
     CSAS_O_FUNC(fscanf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    for (i=2; i<argc; i++) {
+        if (args[i] && IS_STRING == Z_TYPE_PP(args[i])) {
+            Z_STRVAL_P(*(args[i])) = erealloc(Z_STRVAL_P(*(args[i])), Z_STRLEN_P(*(args[i])) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            php_csas_set_safety(*(args[i]), PHP_CSAS_UNSAFE);
+        }
+    }
+
+    efree(args);
 }
 PHP_FUNCTION(csas_socket_read) {
     CSAS_O_FUNC(socket_read)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
