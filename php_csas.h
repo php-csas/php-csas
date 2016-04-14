@@ -218,7 +218,8 @@ PHP_MINFO_FUNCTION(csas);
 
 PHP_FUNCTION(csas);
 PHP_FUNCTION(uncsas);
-PHP_FUNCTION(html_safe);
+PHP_FUNCTION(csas_mark_safe);
+PHP_FUNCTION(csas_mark_unsafe);
 PHP_FUNCTION(is_csased);
 
 PHP_FUNCTION(csas_strval);
@@ -235,6 +236,19 @@ PHP_FUNCTION(csas_str_replace);
 PHP_FUNCTION(csas_str_pad);
 PHP_FUNCTION(csas_strtolower);
 PHP_FUNCTION(csas_strtoupper);
+
+PHP_FUNCTION(csas_fgetc);
+PHP_FUNCTION(csas_fgetcsv);
+PHP_FUNCTION(csas_fgets);
+PHP_FUNCTION(csas_fgetss);
+PHP_FUNCTION(csas_file_get_contents);
+PHP_FUNCTION(csas_file);
+PHP_FUNCTION(csas_fread);
+PHP_FUNCTION(csas_fscanf);
+PHP_FUNCTION(csas_socket_read);
+PHP_FUNCTION(csas_socket_recv);
+PHP_FUNCTION(csas_socket_recvfrom);
+PHP_FUNCTION(csas_getenv);
 
 PHP_FUNCTION(csas_printf);
 PHP_FUNCTION(csas_vprintf);

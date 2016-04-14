@@ -46,6 +46,7 @@
 #include "php_csas.h"
 #include "htmlparser/htmlparser.h"
 #include "sanitizers/sanitizers.h"
+#include "formatted_csas_print.c"
 
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
@@ -62,7 +63,12 @@ ZEND_BEGIN_ARG_INFO_EX(uncsas_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(1, ...)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(html_safe_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(csas_mark_safe_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(1, string)
+    ZEND_ARG_INFO(1, ...)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(csas_mark_unsafe_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(1, string)
     ZEND_ARG_INFO(1, ...)
 ZEND_END_ARG_INFO()
@@ -77,7 +83,8 @@ ZEND_END_ARG_INFO()
 zend_function_entry csas_functions[] = {
     PHP_FE(csas, csas_arginfo)
     PHP_FE(uncsas, uncsas_arginfo)
-    PHP_FE(html_safe, html_safe_arginfo)
+    PHP_FE(csas_mark_safe, csas_mark_safe_arginfo)
+    PHP_FE(csas_mark_unsafe, csas_mark_unsafe_arginfo)
     PHP_FE(is_csased, is_csased_arginfo)
     {NULL, NULL, NULL}
 };
@@ -137,6 +144,20 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func strtolower;
     php_func strtoupper;
 
+    // input functions
+    php_func fgetc;
+    php_func fgetcsv;
+    php_func fgets;
+    php_func fgetss;
+    php_func file_get_contents;
+    php_func file;
+    php_func fread;
+    php_func fscanf;
+    php_func socket_read;
+    php_func socket_recv;
+    php_func socket_recvfrom;
+    php_func getenv;
+
     // mysqli_result functions
     php_func mysqli_result_fetch_assoc;
     // TODO: a whole lote more input functions (see Trello)
@@ -151,7 +172,7 @@ static struct csas_overridden_fucs /* {{{ */ {
 
 typedef enum CsasContext CsasContext;
 
-htmlparser_ctx *htmlparser;
+htmlparser_ctx *htmlparser = NULL;
 
 static htmlparser_ctx *htmlparser_init(int in_tag, CsasContext cc) /* {{{ */ {
     htmlparser_ctx *htmlparser_ = htmlparser_new();
@@ -856,11 +877,24 @@ static char *sanitize_for_context(char *s, int safety, int *len) {
     return "";
 }
 
-static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
-    if (htmlparser == NULL) {
-        htmlparser = htmlparser_init(CSAS_UNUSED, 0);
+static int php_csas_safe_write(char *s, int len, uint safety TSRMLS_DC) {
+    int rval = 0;
+    char *s_safe = sanitize_for_context(s, safety, &len);
+
+    if (len > 0)  {
+        rval = PHPWRITE(s_safe, len);
+        htmlparser_update_context(htmlparser, s_safe, len);
     }
 
+    if (s_safe != s) {
+        // if sanitizer had to allocate new memory, free it now
+        efree(s_safe);
+    }
+
+    return rval;
+}
+
+static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zend_op *opline = execute_data->opline;
     zval *op1 = NULL;
     csas_free_op free_op1 = {0};
@@ -909,30 +943,13 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         }
 
         // the string value of the output
-        zval op1_safe;
         char* s = cast_zval_to_string(op1);
         int len = Z_STRLEN_P(op1);
-        int ctx = htmlparser_get_context(htmlparser);
 
         //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
         //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
 
-        // this also updates len to the appropriate value
-        char *s_safe = sanitize_for_context(s, safety, &len);
-
-        Z_TYPE(op1_safe) = IS_STRING;
-        Z_STRLEN(op1_safe) = len;
-        Z_STRVAL(op1_safe) = s_safe;
-
-        // print variable 
-        if (len > 0)  zend_print_variable(&op1_safe);
-        // and update context
-        htmlparser_update_context(htmlparser, s_safe, len);
-
-        if (s_safe != s) {
-            // if sanitizer had to allocate new memory, free it now
-            efree(s_safe);
-        }
+        php_csas_safe_write(s, len, safety TSRMLS_CC);
     }
 
     if (opline->opcode != ZEND_ECHO) {
@@ -944,6 +961,7 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     execute_data->opline++;
     return ZEND_USER_OPCODE_CONTINUE;
 } /* }}} */
+
 
 static int php_csas_include_or_eval_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zend_op *opline = execute_data->opline;
@@ -2265,55 +2283,6 @@ static void php_csas_fcall_check(ZEND_OPCODE_HANDLER_ARGS, zend_op *opline, char
                 break;
             }
 
-            if (strncmp("printf", fname, len) == 0) {
-                if (arg_count > 1) {
-                    zval *el;
-                    uint i;
-                    for (i=0;i<arg_count;i++) {
-                        el = *((zval **) (p - (arg_count - i)));
-                        if (el && IS_STRING == Z_TYPE_P(el) && Z_STRLEN_P(el) && php_csas_get_safety(el)!=PHP_CSAS_SAFE_ALL) {
-                            php_csas_error(NULL TSRMLS_CC, "%dth argument contains data that might be csased", i + 1);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-
-            if (strncmp("vprintf", fname, len) == 0) {
-                if (arg_count > 1) {
-                    HashTable *ht;
-                    zval **ppzval, *el = *((zval **) ( p - (arg_count - 1)));
-                    if (!el || IS_ARRAY != Z_TYPE_P(el) || zend_hash_num_elements(Z_ARRVAL_P(el))) {
-                        break;
-                    }
-
-                    ht = Z_ARRVAL_P(el);
-                    for(zend_hash_internal_pointer_reset(ht);
-                            zend_hash_has_more_elements(ht) == SUCCESS;
-                            zend_hash_move_forward(ht)) {
-                        if (zend_hash_get_current_data(ht, (void**)&ppzval) == FAILURE) {
-                            continue;
-                        }
-
-                        if (IS_STRING == Z_TYPE_PP(ppzval) && Z_STRLEN_PP(ppzval) && php_csas_get_safety(*ppzval)!=PHP_CSAS_SAFE_ALL) {
-                            char *key;
-                            long idx;
-                            switch (zend_hash_get_current_key(ht, &key, &idx, 0)) {
-                                case HASH_KEY_IS_STRING:
-                                    php_csas_error(NULL TSRMLS_CC, "Second argument contains data(index:%s) that might be csased", key);
-                                    break;
-                                case HASH_KEY_IS_LONG:
-                                    php_csas_error(NULL TSRMLS_CC, "Second argument contains data(index:%ld) that might be csased", idx);
-                                    break;
-                            }
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-
             if (strncmp("file_put_contents", fname, len) == 0
                    || strncmp("fwrite", fname, len) == 0) {
                 if (arg_count > 1) {
@@ -2650,7 +2619,7 @@ static int php_csas_send_ref_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
 
     if (!op1 || *op1 == &EG(error_zval) || *op1 == &EG(uninitialized_zval) || IS_STRING != Z_TYPE_PP(op1) 
              || PZVAL_IS_REF(*op1) || Z_REFCOUNT_PP(op1) < 2 || !Z_STRLEN_PP(op1) 
-             || PHP_CSAS_IS_SAFE_FOR(*op1, PHP_CSAS_SAFE_ALL)) {
+             || php_csas_get_safety(*op1) == PHP_CSAS_SAFE_ALL) {
         return ZEND_USER_OPCODE_DISPATCH;
     }
 
@@ -2805,6 +2774,20 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_printf[]      = "printf";
     char f_vprintf[]     = "vprintf";
 
+    char f_fgetc[] = "fgetc";
+    char f_fgetcsv[] = "fgetcsv";
+    char f_fgets[] = "fgets";
+    char f_fgetss[] = "fgetss";
+    char f_file_get_contents[] = "file_get_contents";
+    char f_file[] = "file";
+    char f_fread[] = "fread";
+    char f_fscanf[] = "fscanf";
+    char f_socket_read[] = "socket_read";
+    char f_socket_recv[] = "socket_recv";
+    char f_socket_recvfrom[] = "socket_recvfrom";
+    char f_getenv[] = "getenv";
+
+
     php_csas_override_func(f_strval, sizeof(f_strval), PHP_FN(csas_strval), &CSAS_O_FUNC(strval) TSRMLS_CC);
     php_csas_override_func(f_sprintf, sizeof(f_sprintf), PHP_FN(csas_sprintf), &CSAS_O_FUNC(sprintf) TSRMLS_CC);
     php_csas_override_func(f_vsprintf, sizeof(f_vsprintf), PHP_FN(csas_vsprintf), &CSAS_O_FUNC(vsprintf) TSRMLS_CC);
@@ -2825,29 +2808,191 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_func(f_printf, sizeof(f_printf), PHP_FN(csas_printf), &CSAS_O_FUNC(printf) TSRMLS_CC);
     php_csas_override_func(f_vprintf, sizeof(f_vprintf), PHP_FN(csas_vprintf), &CSAS_O_FUNC(vprintf) TSRMLS_CC);
 
-
+    php_csas_override_func(f_fgetc, sizeof(f_fgetc), PHP_FN(csas_fgetc), &CSAS_O_FUNC(fgetc) TSRMLS_CC);
+    php_csas_override_func(f_fgetcsv, sizeof(f_fgetcsv), PHP_FN(csas_fgetcsv), &CSAS_O_FUNC(fgetcsv) TSRMLS_CC);
+    php_csas_override_func(f_fgets, sizeof(f_fgets), PHP_FN(csas_fgets), &CSAS_O_FUNC(fgets) TSRMLS_CC);
+    php_csas_override_func(f_fgetss, sizeof(f_fgetss), PHP_FN(csas_fgetss), &CSAS_O_FUNC(fgetss) TSRMLS_CC);
+    php_csas_override_func(f_file_get_contents, sizeof(f_file_get_contents), PHP_FN(csas_file_get_contents), &CSAS_O_FUNC(file_get_contents) TSRMLS_CC);
+    php_csas_override_func(f_file, sizeof(f_file), PHP_FN(csas_file), &CSAS_O_FUNC(file) TSRMLS_CC);
+    php_csas_override_func(f_fread, sizeof(f_fread), PHP_FN(csas_fread), &CSAS_O_FUNC(fread) TSRMLS_CC);
+    php_csas_override_func(f_fscanf, sizeof(f_fscanf), PHP_FN(csas_fscanf), &CSAS_O_FUNC(fscanf) TSRMLS_CC);
+    php_csas_override_func(f_socket_read, sizeof(f_socket_read), PHP_FN(csas_socket_read), &CSAS_O_FUNC(socket_read) TSRMLS_CC);
+    php_csas_override_func(f_socket_recv, sizeof(f_socket_recv), PHP_FN(csas_socket_recv), &CSAS_O_FUNC(socket_recv) TSRMLS_CC);
+    php_csas_override_func(f_socket_recvfrom, sizeof(f_socket_recvfrom), PHP_FN(csas_socket_recvfrom), &CSAS_O_FUNC(socket_recvfrom) TSRMLS_CC);
+    php_csas_override_func(f_getenv, sizeof(f_getenv), PHP_FN(csas_getenv), &CSAS_O_FUNC(getenv) TSRMLS_CC);
 
     php_csas_override_class_func("mysqli_result", 14, 
             "fetch_assoc", 12, 
             PHP_FN(csas_mysqli_result_fetch_assoc), &CSAS_O_FUNC(mysqli_result_fetch_assoc) TSRMLS_CC);
 } /* }}} */
 
+PHP_FUNCTION(csas_fgetc) {
+    CSAS_O_FUNC(fgetc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
+}
+PHP_FUNCTION(csas_fgetcsv) {
+    CSAS_O_FUNC(fgetcsv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fgets) {
+    CSAS_O_FUNC(fgets)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
+}
+PHP_FUNCTION(csas_fgetss) {
+    CSAS_O_FUNC(fgetss)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_SAFE_PCDATA);
+    }
+}
+PHP_FUNCTION(csas_file_get_contents) {
+    CSAS_O_FUNC(file_get_contents)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
+}
+PHP_FUNCTION(csas_file) {
+    CSAS_O_FUNC(file)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_fread) {
+    CSAS_O_FUNC(fread)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
+}
+PHP_FUNCTION(csas_fscanf) {
+    CSAS_O_FUNC(fscanf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_socket_read) {
+    CSAS_O_FUNC(socket_read)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
+}
+PHP_FUNCTION(csas_socket_recv) {
+    CSAS_O_FUNC(socket_recv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_socket_recvfrom) {
+    CSAS_O_FUNC(socket_recvfrom)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+PHP_FUNCTION(csas_getenv) {
+    CSAS_O_FUNC(getenv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    if (IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_UNSAFE);
+    }
+}
+
 #ifdef COMPILE_DL_CSAS
 ZEND_GET_MODULE(csas)
 #endif
 
-/* {{{ proto int printf(string $format [, mixed $args [, mixed $... ]])
- */
+/* {{{ proto int printf(string format [, mixed arg1 [, mixed ...]])
+   Output a formatted string */
 PHP_FUNCTION(csas_printf) {
-    CSAS_O_FUNC(printf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    char *result;
+    int len, rlen;
+    zval ***args;
+    int i, argc;
+    uint safety = PHP_CSAS_SAFE_ALL;
+
+    argc = ZEND_NUM_ARGS();
+
+    if (argc < 1) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    args = (zval ***)safe_emalloc(argc, sizeof(zval *), 0);
+    if (zend_get_parameters_array_ex(argc, args) == FAILURE) {
+        efree(args);
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    for (i=0; i<argc; i++) {
+        if (args[i] && IS_STRING == Z_TYPE_PP(args[i])) {
+            safety &= php_csas_get_safety(*args[i]);
+            /* we can quit if it's already completely unsafe */
+            if (safety == PHP_CSAS_UNSAFE) break;
+        }
+    }
+    efree(args);
+
+    if ((result=php_formatted_print(ht, &len, 0, 0 TSRMLS_CC))==NULL) {
+        RETURN_FALSE;
+    }
+    rlen = php_csas_safe_write(result, len, safety TSRMLS_CC);
+    efree(result);
+    RETURN_LONG(rlen);
 }
 /* }}} */
 
-/* {{{ proto int vprintf(string $format, array $args)
- */
+/* {{{ proto int vprintf(string format, array args)
+   Output a formatted string */
 PHP_FUNCTION(csas_vprintf) {
-    CSAS_O_FUNC(vprintf)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+    char *result;
+    int len, rlen;
+
+    zval *format, *args;
+    int argc;
+    uint safety = PHP_CSAS_SAFE_ALL;
+
+    argc = ZEND_NUM_ARGS();
+
+    if (argc < 1) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    if (zend_parse_parameters(argc TSRMLS_CC, "za", &format, &args) == FAILURE) {
+        ZVAL_FALSE(return_value);
+        WRONG_PARAM_COUNT;
+    }
+
+    do {
+        if (IS_STRING == Z_TYPE_P(format)) {
+            safety &= php_csas_get_safety(format);
+            /* we can quit if it's already completely unsafe */
+            if (safety == PHP_CSAS_UNSAFE) break;
+        }
+
+        if (IS_ARRAY == Z_TYPE_P(args)) {
+            HashTable *ht = Z_ARRVAL_P(args);
+            zval **ppzval;
+            for(zend_hash_internal_pointer_reset(ht);
+                    zend_hash_has_more_elements(ht) == SUCCESS;
+                    zend_hash_move_forward(ht)) {
+                if (zend_hash_get_current_data(ht, (void**)&ppzval) == FAILURE) {
+                    continue;
+                }
+                if (IS_STRING == Z_TYPE_PP(ppzval) && Z_STRLEN_PP(ppzval)) {
+                    safety &= php_csas_get_safety(*ppzval);
+                    if (safety == PHP_CSAS_UNSAFE) break;
+                }
+            }
+            break;
+        }
+    } while (0);
+
+    if ((result=php_formatted_print(ht, &len, 1, 0 TSRMLS_CC))==NULL) {
+        RETURN_FALSE;
+    }
+
+    rlen = php_csas_safe_write(result, len, safety TSRMLS_CC);
+    efree(result);
+    RETURN_LONG(rlen);
 }
+
 /* }}} */
 
 /* {{{ proto array fetch_assoc(mysqli_result $res)
@@ -3354,9 +3499,9 @@ PHP_FUNCTION(uncsas)
 }
 /* }}} */
 
-/* {{{ proto bool html_safe(string $str[, string ...])
+/* {{{ proto bool csas_mark_unsafe(string $str[, string ...])
  */
-PHP_FUNCTION(html_safe)
+PHP_FUNCTION(csas_mark_unsafe)
 {
     zval ***args;
     int argc;
@@ -3376,7 +3521,46 @@ PHP_FUNCTION(html_safe)
 
     for (i=0; i<argc; i++) {
         if (IS_STRING == Z_TYPE_PP(args[i])) {
-            php_csas_set_safety(*args[i], PHP_CSAS_SAFE_PCDATA);
+            if (!PHP_CSAS_IS_MARKED(*args[i])) {
+                Z_STRVAL_P(*args[i]) = erealloc(Z_STRVAL_P(*args[i]), Z_STRLEN_P(*args[i]) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            }
+            php_csas_set_safety(*args[i], PHP_CSAS_UNSAFE);
+        }
+    }
+
+    efree(args);
+
+    RETURN_TRUE;
+}
+/* }}} */
+/* }}} */
+
+/* {{{ proto bool csas_mark_safe(string $str[, string ...])
+ */
+PHP_FUNCTION(csas_mark_safe)
+{
+    zval ***args;
+    int argc;
+    int i;
+
+    if (!CSAS_G(enable)) {
+        RETURN_TRUE;
+    }
+
+    argc = ZEND_NUM_ARGS();
+    args = (zval ***)safe_emalloc(argc, sizeof(zval **), 0);
+
+    if (ZEND_NUM_ARGS() == 0 || zend_get_parameters_array_ex(argc, args) == FAILURE) {
+        efree(args);
+        return;
+    }
+
+    for (i=0; i<argc; i++) {
+        if (IS_STRING == Z_TYPE_PP(args[i])) {
+            if (!PHP_CSAS_IS_MARKED(*args[i])) {
+                Z_STRVAL_P(*args[i]) = erealloc(Z_STRVAL_P(*args[i]), Z_STRLEN_P(*args[i]) + 1 + PHP_CSAS_MAGIC_LENGTH);
+            }
+            php_csas_set_safety(*args[i], PHP_CSAS_SAFE_ALL);
         }
     }
 
@@ -3438,7 +3622,10 @@ PHP_MSHUTDOWN_FUNCTION(csas)
  */
 PHP_RINIT_FUNCTION(csas)
 {
-    htmlparser = NULL;
+    if (htmlparser == NULL) {
+        htmlparser = htmlparser_init(CSAS_UNUSED, 0);
+    }
+
     if (SG(sapi_started) || !CSAS_G(enable)) {
         return SUCCESS;
     }
