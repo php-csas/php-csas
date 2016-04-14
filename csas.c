@@ -2817,11 +2817,11 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_mysqli_fetch_object[] = "mysqli_fetch_object";
     char f_mysqli_fetch_row[] = "mysqli_fetch_row";
 
-    char c_pdo_statement = "PDOStatement";
-    char f_pdo_fetch = "fetch";
-    char f_pdo_fetch_all = "fetchAll";
-    char f_pdo_fetch_column = "fetchColumn";
-    char f_pdo_fetch_object = "fetchObject";
+    char c_pdo_statement[] = "PDOStatement";
+    char f_pdo_fetch[] = "fetch";
+    char f_pdo_fetch_all[] = "fetchAll";
+    char f_pdo_fetch_column[] = "fetchColumn";
+    char f_pdo_fetch_object[] = "fetchObject";
 
     php_csas_override_func(f_strval, sizeof(f_strval), PHP_FN(csas_strval), &CSAS_O_FUNC(strval) TSRMLS_CC);
     php_csas_override_func(f_sprintf, sizeof(f_sprintf), PHP_FN(csas_sprintf), &CSAS_O_FUNC(sprintf) TSRMLS_CC);
