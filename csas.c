@@ -160,7 +160,16 @@ static struct csas_overridden_fucs /* {{{ */ {
 
     // mysqli_result functions
     php_func mysqli_result_fetch_assoc;
-    // TODO: a whole lote more input functions (see Trello)
+    php_func mysqli_result_fetch_array;
+    php_func mysqli_result_fetch_all;
+    php_func mysqli_result_fetch_object;
+    php_func mysqli_result_fetch_row;
+
+    php_func mysqli_fetch_assoc;
+    php_func mysqli_fetch_array;
+    php_func mysqli_fetch_all;
+    php_func mysqli_fetch_object;
+    php_func mysqli_fetch_row;
 
     // output functions
     php_func printf;
