@@ -3090,7 +3090,7 @@ PHP_FUNCTION(csas_vprintf) {
 PHP_FUNCTION(csas_mysqli_result_fetch_assoc) {
     CSAS_O_FUNC(mysqli_result_fetch_assoc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 
-    if (Z_TYPE_P(return_value) == IS_ARRAY) {
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
         php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
     }
 }
