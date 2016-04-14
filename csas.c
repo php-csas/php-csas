@@ -919,6 +919,40 @@ static int php_csas_safe_write(char *s, int len, uint safety TSRMLS_DC) {
     return rval;
 }
 
+static size_t php_csas_safe_stream_passthru(php_stream* stream, uint safety STREAMS_DC TSRMLS_DC)
+{
+    size_t bcount = 0;
+    char buf[8192];
+    int b;
+
+    if (php_stream_mmap_possible(stream)) {
+        char *p;
+        size_t mapped;
+
+        p = php_stream_mmap_range(stream, php_stream_tell(stream), PHP_STREAM_MMAP_ALL, PHP_STREAM_MAP_MODE_SHARED_READONLY, &mapped);
+
+        if (p) {
+            do {
+                /* output functions return int, so pass in int max */
+                if (0 < (b = PHPWRITE(p, MIN(mapped - bcount, INT_MAX)))) {
+                    bcount += b;
+                }
+            } while (b > 0 && mapped > bcount);
+
+            php_stream_mmap_unmap_ex(stream, mapped);
+
+            return bcount;
+        }
+    }
+
+    while ((b = php_stream_read(stream, buf, sizeof(buf))) > 0) {
+        PHPWRITE(buf, b);
+        bcount += b;
+    }
+
+    return bcount;
+}
+
 static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zend_op *opline = execute_data->opline;
     zval *op1 = NULL;
@@ -2778,6 +2812,7 @@ static void php_csas_override_class_func(char *cname, uint clen, char *fname, ui
         }
     }
 } /* }}} */
+
 
 static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_join[]        = "join";
