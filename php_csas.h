@@ -252,6 +252,8 @@ PHP_FUNCTION(csas_getenv);
 
 PHP_FUNCTION(csas_printf);
 PHP_FUNCTION(csas_vprintf);
+PHP_FUNCTION(csas_readfile);
+PHP_FUNCTION(csas_fpassthru);
 
 PHP_FUNCTION(csas_mysqli_result_fetch_assoc);
 PHP_FUNCTION(csas_mysqli_result_fetch_array);
