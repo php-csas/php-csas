@@ -265,6 +265,10 @@ PHP_FUNCTION(csas_mysqli_fetch_all);
 PHP_FUNCTION(csas_mysqli_fetch_object);
 PHP_FUNCTION(csas_mysqli_fetch_row);
 
+PHP_FUNCTION(csas_pdo_fetch);
+PHP_FUNCTION(csas_pdo_fetch_all);
+PHP_FUNCTION(csas_pdo_fetch_column);
+PHP_FUNCTION(csas_pdo_fetch_object);
 
 typedef void (*php_func)(INTERNAL_FUNCTION_PARAMETERS);
 

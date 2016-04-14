@@ -158,22 +158,30 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func socket_recvfrom;
     php_func getenv;
 
-    // mysqli_result functions
+    // mysqli_result class methods
     php_func mysqli_result_fetch_assoc;
     php_func mysqli_result_fetch_array;
     php_func mysqli_result_fetch_all;
     php_func mysqli_result_fetch_object;
     php_func mysqli_result_fetch_row;
 
+    // mysqli_procedural methods
     php_func mysqli_fetch_assoc;
     php_func mysqli_fetch_array;
     php_func mysqli_fetch_all;
     php_func mysqli_fetch_object;
     php_func mysqli_fetch_row;
 
+    // pdo_statement class methods
+    php_func pdo_fetch;
+    php_func pdo_fetch_all;
+    php_func pdo_fetch_column;
+    php_func pdo_fetch_object;
+
     // output functions
     php_func printf;
     php_func vprintf;
+
 } csas_origin_funcs;
 
 #define CSAS_O_FUNC(m) (csas_origin_funcs.m)
@@ -2809,6 +2817,11 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_mysqli_fetch_object[] = "mysqli_fetch_object";
     char f_mysqli_fetch_row[] = "mysqli_fetch_row";
 
+    char c_pdo_statement = "PDOStatement";
+    char f_pdo_fetch = "fetch";
+    char f_pdo_fetch_all = "fetchAll";
+    char f_pdo_fetch_column = "fetchColumn";
+    char f_pdo_fetch_object = "fetchObject";
 
     php_csas_override_func(f_strval, sizeof(f_strval), PHP_FN(csas_strval), &CSAS_O_FUNC(strval) TSRMLS_CC);
     php_csas_override_func(f_sprintf, sizeof(f_sprintf), PHP_FN(csas_sprintf), &CSAS_O_FUNC(sprintf) TSRMLS_CC);
@@ -2864,6 +2877,15 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
                            &CSAS_O_FUNC(mysqli_fetch_object) TSRMLS_CC);
     php_csas_override_func(f_mysqli_fetch_row, sizeof(f_mysqli_fetch_assoc), PHP_FN(csas_mysqli_fetch_assoc),
                            &CSAS_O_FUNC(mysqli_fetch_row) TSRMLS_CC);
+
+    php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch, sizeof(f_pdo_fetch),
+                                 PHP_FN(csas_pdo_fetch), &CSAS_O_FUNC(pdo_fetch) TSRMLS_CC);
+    php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch_all, sizeof(f_pdo_fetch_all),
+                                 PHP_FN(csas_pdo_fetch_all), &CSAS_O_FUNC(pdo_fetch_all) TSRMLS_CC);
+    php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch_column, sizeof(f_pdo_fetch_column),
+                                 PHP_FN(csas_pdo_fetch_column), &CSAS_O_FUNC(pdo_fetch_column) TSRMLS_CC);
+    php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch_object, sizeof(f_pdo_fetch_object),
+                                 PHP_FN(csas_pdo_fetch_object), &CSAS_O_FUNC(pdo_fetch_object) TSRMLS_CC);
 } /* }}} */
 
 PHP_FUNCTION(csas_fgetc) {
@@ -3149,30 +3171,90 @@ PHP_FUNCTION(csas_mysqli_result_fetch_row) {
  */
 PHP_FUNCTION(csas_mysqli_fetch_assoc) {
     CSAS_O_FUNC(mysqli_fetch_assoc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
 }
 /* }}} */
+
 /* {{{ proto array fetch_array(mysqli_result $res)
  */
 PHP_FUNCTION(csas_mysqli_fetch_array) {
     CSAS_O_FUNC(mysqli_fetch_array)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
 }
 /* }}} */
+
 /* {{{ proto array fetch_all(mysqli_result $res)
  */
 PHP_FUNCTION(csas_mysqli_fetch_all) {
     CSAS_O_FUNC(mysqli_fetch_all)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
 }
 /* }}} */
+
 /* {{{ proto array fetch_object(mysqli_result $res)
  */
 PHP_FUNCTION(csas_mysqli_fetch_object) {
     CSAS_O_FUNC(mysqli_fetch_object)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
+
 /* {{{ proto array fetch_row(mysqli_result $res)
  */
 PHP_FUNCTION(csas_mysqli_fetch_row) {
     CSAS_O_FUNC(mysqli_fetch_row)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
+}
+/* }}} */
+
+/* {{{ proto array fetch_row(mysqli_result $res)
+ */
+PHP_FUNCTION(csas_pdo_fetch) {
+    CSAS_O_FUNC(pdo_fetch)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
+}
+/* }}} */
+
+/* {{{ proto array fetch_row(mysqli_result $res)
+ */
+PHP_FUNCTION(csas_pdo_fetch_all) {
+    CSAS_O_FUNC(pdo_fetch_all)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
+}
+/* }}} */
+
+/* {{{ proto array fetch_row(mysqli_result $res)
+ */
+PHP_FUNCTION(csas_pdo_fetch_column) {
+    CSAS_O_FUNC(pdo_fetch_column)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && Z_TYPE_P(return_value) == IS_ARRAY) {
+        php_csas_mark_strings(return_value, PHP_CSAS_UNSAFE, 1 TSRMLS_CC);
+    }
+}
+/* }}} */
+
+/* {{{ proto array fetch_row(mysqli_result $res)
+ */
+PHP_FUNCTION(csas_pdo_fetch_object) {
+    CSAS_O_FUNC(pdo_fetch_object)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
