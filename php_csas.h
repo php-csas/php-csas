@@ -254,6 +254,17 @@ PHP_FUNCTION(csas_printf);
 PHP_FUNCTION(csas_vprintf);
 
 PHP_FUNCTION(csas_mysqli_result_fetch_assoc);
+PHP_FUNCTION(csas_mysqli_result_fetch_array);
+PHP_FUNCTION(csas_mysqli_result_fetch_all);
+PHP_FUNCTION(csas_mysqli_result_fetch_object);
+PHP_FUNCTION(csas_mysqli_result_fetch_row);
+
+PHP_FUNCTION(csas_mysqli_fetch_assoc);
+PHP_FUNCTION(csas_mysqli_fetch_array);
+PHP_FUNCTION(csas_mysqli_fetch_all);
+PHP_FUNCTION(csas_mysqli_fetch_object);
+PHP_FUNCTION(csas_mysqli_fetch_row);
+
 
 typedef void (*php_func)(INTERNAL_FUNCTION_PARAMETERS);
 
