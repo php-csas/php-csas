@@ -1,6 +1,6 @@
 /*
   +----------------------------------------------------------------------+
-  | Sanitizer PHP Functions                                                                 |
+  | Sanitizer PHP Functions                                              |
   +----------------------------------------------------------------------+
   | Copyright (c) 2012-2015 The PHP Group                                |
   +----------------------------------------------------------------------+
@@ -65,7 +65,7 @@ PHP_FUNCTION(js_sanitizer){
   free(op1);
 }
 
-PHP_FUNCTION(url_querry_sanitizer){
+PHP_FUNCTION(url_query_sanitizer){
   zval **arg;
   char *op1;
   int len;
