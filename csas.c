@@ -43,11 +43,17 @@
 #include "zend_execute.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+#include "ext/standard/file.h"
 #include "php_csas.h"
 #include "htmlparser/htmlparser.h"
 #include "sanitizers/sanitizers.h"
 #include "formatted_csas_print.c"
 
+#define PHP_STREAM_TO_ZVAL(stream, arg) \
+    php_stream_from_zval_no_verify(stream, arg); \
+    if (stream == NULL) {   \
+        RETURN_FALSE;   \
+    }
 
 ZEND_DECLARE_MODULE_GLOBALS(csas)
 
@@ -937,7 +943,7 @@ static size_t php_csas_safe_stream_passthru(php_stream* stream, uint safety STRE
         if (p) {
             do {
                 /* output functions return int, so pass in int max */
-                if (0 < (b = PHPWRITE(p, MIN(mapped - bcount, INT_MAX)))) {
+                if (0 < (b = php_csas_safe_write(p, MIN(mapped - bcount, INT_MAX), safety TSRMLS_CC))) {
                     bcount += b;
                 }
             } while (b > 0 && mapped > bcount);
@@ -949,7 +955,7 @@ static size_t php_csas_safe_stream_passthru(php_stream* stream, uint safety STRE
     }
 
     while ((b = php_stream_read(stream, buf, sizeof(buf))) > 0) {
-        PHPWRITE(buf, b);
+        php_csas_safe_write(buf, b, safety TSRMLS_CC);
         bcount += b;
     }
 
@@ -2938,6 +2944,50 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch_object, sizeof(f_pdo_fetch_object),
                                  PHP_FN(csas_pdo_fetch_object), &CSAS_O_FUNC(pdo_fetch_object) TSRMLS_CC);
 } /* }}} */
+
+PHP_FUNCTION(csas_fpassthru)
+{
+    zval *arg1;
+    int size;
+    php_stream *stream;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &arg1) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    PHP_STREAM_TO_ZVAL(stream, &arg1);
+
+    size = php_csas_safe_stream_passthru(stream, PHP_CSAS_UNSAFE STREAMS_CC TSRMLS_CC);
+    RETURN_LONG(size);
+}
+/* {{{ proto int readfile(string filename [, bool use_include_path[, resource context]])
+   Output a file or a URL */
+PHP_FUNCTION(csas_readfile)
+{
+    char *filename;
+    int filename_len;
+    int size = 0;
+    zend_bool use_include_path = 0;
+    zval *zcontext = NULL;
+    php_stream *stream;
+    php_stream_context *context = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|br!", &filename, &filename_len, &use_include_path, &zcontext) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    context = php_stream_context_from_zval(zcontext, 0);
+
+    stream = php_stream_open_wrapper_ex(filename, "rb", (use_include_path ? USE_PATH : 0) | REPORT_ERRORS, NULL, context);
+    if (stream) {
+        size = php_csas_safe_stream_passthru(stream, PHP_CSAS_UNSAFE STREAMS_CC TSRMLS_CC);
+        php_stream_close(stream);
+        RETURN_LONG(size);
+    }
+
+    RETURN_FALSE;
+}
+/* }}} */
 
 PHP_FUNCTION(csas_fgetc) {
     CSAS_O_FUNC(fgetc)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
