@@ -2915,12 +2915,16 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
 
     php_csas_override_class_func(c_mysqli_result, sizeof(c_mysqli_result), f_fetch_assoc, sizeof(f_fetch_assoc),
                                  PHP_FN(csas_mysqli_result_fetch_assoc), &CSAS_O_FUNC(mysqli_result_fetch_assoc) TSRMLS_CC);
-    php_csas_override_class_func(c_mysqli_result, sizeof(c_mysqli_result), f_fetch_array, sizeof(f_fetch_assoc),
-                                 PHP_FN(csas_mysqli_result_fetch_array), &CSAS_O_FUNC(mysqli_result_fetch_assoc) TSRMLS_CC);
+
+    php_csas_override_class_func(c_mysqli_result, sizeof(c_mysqli_result), f_fetch_array, sizeof(f_fetch_array),
+                                 PHP_FN(csas_mysqli_result_fetch_array), &CSAS_O_FUNC(mysqli_result_fetch_array) TSRMLS_CC);
+
     php_csas_override_class_func(c_mysqli_result, sizeof(c_mysqli_result), f_fetch_all, sizeof(f_fetch_all),
                                  PHP_FN(csas_mysqli_result_fetch_all), &CSAS_O_FUNC(mysqli_result_fetch_all) TSRMLS_CC);
+
     php_csas_override_class_func(c_mysqli_result, sizeof(c_mysqli_result), f_fetch_object, sizeof(f_fetch_object),
                                  PHP_FN(csas_mysqli_result_fetch_object), &CSAS_O_FUNC(mysqli_result_fetch_object) TSRMLS_CC);
+
     php_csas_override_class_func(c_mysqli_result, sizeof(c_mysqli_result), f_fetch_row, sizeof(f_fetch_row),
                                  PHP_FN(csas_mysqli_result_fetch_row), &CSAS_O_FUNC(mysqli_result_fetch_row) TSRMLS_CC);
 
@@ -2928,11 +2932,11 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
                            &CSAS_O_FUNC(mysqli_fetch_assoc) TSRMLS_CC);
     php_csas_override_func(f_mysqli_fetch_array, sizeof(f_mysqli_fetch_array), PHP_FN(csas_mysqli_fetch_array),
                            &CSAS_O_FUNC(mysqli_fetch_array) TSRMLS_CC);
-    php_csas_override_func(f_mysqli_fetch_all, sizeof(f_mysqli_fetch_assoc), PHP_FN(csas_mysqli_fetch_assoc),
+    php_csas_override_func(f_mysqli_fetch_all, sizeof(f_mysqli_fetch_all), PHP_FN(csas_mysqli_fetch_all),
                            &CSAS_O_FUNC(mysqli_fetch_all) TSRMLS_CC);
-    php_csas_override_func(f_mysqli_fetch_object, sizeof(f_mysqli_fetch_assoc), PHP_FN(csas_mysqli_fetch_assoc),
+    php_csas_override_func(f_mysqli_fetch_object, sizeof(f_mysqli_fetch_object), PHP_FN(csas_mysqli_fetch_object),
                            &CSAS_O_FUNC(mysqli_fetch_object) TSRMLS_CC);
-    php_csas_override_func(f_mysqli_fetch_row, sizeof(f_mysqli_fetch_assoc), PHP_FN(csas_mysqli_fetch_assoc),
+    php_csas_override_func(f_mysqli_fetch_row, sizeof(f_mysqli_fetch_row), PHP_FN(csas_mysqli_fetch_row),
                            &CSAS_O_FUNC(mysqli_fetch_row) TSRMLS_CC);
 
     php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch, sizeof(f_pdo_fetch),
