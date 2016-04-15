@@ -236,6 +236,7 @@ PHP_FUNCTION(csas_str_replace);
 PHP_FUNCTION(csas_str_pad);
 PHP_FUNCTION(csas_strtolower);
 PHP_FUNCTION(csas_strtoupper);
+PHP_FUNCTION(csas_htmlspecialchars);
 
 PHP_FUNCTION(csas_fgetc);
 PHP_FUNCTION(csas_fgetcsv);

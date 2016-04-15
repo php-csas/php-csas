@@ -150,6 +150,8 @@ static struct csas_overridden_fucs /* {{{ */ {
     php_func strtolower;
     php_func strtoupper;
 
+    php_func htmlspecialchars;
+
     // output functions
     php_func printf;
     php_func vprintf;
@@ -2409,14 +2411,6 @@ static void php_csas_fcall_check(ZEND_OPCODE_HANDLER_ARGS, zend_op *opline, char
                 break;
             }
 
-            if (strncmp("htmlspecialchars", fname, len) == 0) {
-                zval *el;
-                el = *((zval **) (p - (arg_count)));
-                if (el && IS_STRING == Z_TYPE_P(el) && php_csas_get_safety(el) != PHP_CSAS_SAFE_ALL) {
-                    php_csas_set_safety(el, PHP_CSAS_SAFE_PCDATA);
-                }
-                break;
-            }
 
 #if 0
             if (strncmp("escapeshellcmd", fname, len) == 0
@@ -2840,6 +2834,7 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     char f_str_replace[] = "str_replace";
     char f_strtolower[]  = "strtolower";
     char f_strtoupper[]  = "strtoupper";
+    char f_htmlspecialchars[]  = "htmlspecialchars";
 
     char f_printf[]      = "printf";
     char f_vprintf[]     = "vprintf";
@@ -2894,6 +2889,7 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_func(f_strtolower, sizeof(f_strtolower), PHP_FN(csas_strtolower), &CSAS_O_FUNC(strtolower) TSRMLS_CC);
     php_csas_override_func(f_strtoupper, sizeof(f_strtoupper), PHP_FN(csas_strtoupper), &CSAS_O_FUNC(strtoupper) TSRMLS_CC);
     php_csas_override_func(f_substr, sizeof(f_substr), PHP_FN(csas_substr), &CSAS_O_FUNC(substr) TSRMLS_CC);
+    php_csas_override_func(f_htmlspecialchars, sizeof(f_htmlspecialchars), PHP_FN(csas_htmlspecialchars), &CSAS_O_FUNC(htmlspecialchars) TSRMLS_CC);
 
     php_csas_override_func(f_printf, sizeof(f_printf), PHP_FN(csas_printf), &CSAS_O_FUNC(printf) TSRMLS_CC);
     php_csas_override_func(f_vprintf, sizeof(f_vprintf), PHP_FN(csas_vprintf), &CSAS_O_FUNC(vprintf) TSRMLS_CC);
@@ -2948,6 +2944,15 @@ static void php_csas_override_functions(TSRMLS_D) /* {{{ */ {
     php_csas_override_class_func(c_pdo_statement, sizeof(c_pdo_statement), f_pdo_fetch_object, sizeof(f_pdo_fetch_object),
                                  PHP_FN(csas_pdo_fetch_object), &CSAS_O_FUNC(pdo_fetch_object) TSRMLS_CC);
 } /* }}} */
+
+PHP_FUNCTION(csas_htmlspecialchars) {
+    CSAS_O_FUNC(htmlspecialchars)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+
+    if (return_value && IS_STRING == Z_TYPE_P(return_value) && Z_STRLEN_P(return_value)) {
+        Z_STRVAL_P(return_value) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        php_csas_set_safety(return_value, PHP_CSAS_SAFE_PCDATA);
+    }
+}
 
 PHP_FUNCTION(csas_fpassthru)
 {
