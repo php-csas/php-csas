@@ -236,6 +236,7 @@ PHP_FUNCTION(csas_str_replace);
 PHP_FUNCTION(csas_str_pad);
 PHP_FUNCTION(csas_strtolower);
 PHP_FUNCTION(csas_strtoupper);
+PHP_FUNCTION(csas_htmlspecialchars);
 
 PHP_FUNCTION(csas_fgetc);
 PHP_FUNCTION(csas_fgetcsv);
@@ -252,8 +253,25 @@ PHP_FUNCTION(csas_getenv);
 
 PHP_FUNCTION(csas_printf);
 PHP_FUNCTION(csas_vprintf);
+PHP_FUNCTION(csas_readfile);
+PHP_FUNCTION(csas_fpassthru);
 
 PHP_FUNCTION(csas_mysqli_result_fetch_assoc);
+PHP_FUNCTION(csas_mysqli_result_fetch_array);
+PHP_FUNCTION(csas_mysqli_result_fetch_all);
+PHP_FUNCTION(csas_mysqli_result_fetch_object);
+PHP_FUNCTION(csas_mysqli_result_fetch_row);
+
+PHP_FUNCTION(csas_mysqli_fetch_assoc);
+PHP_FUNCTION(csas_mysqli_fetch_array);
+PHP_FUNCTION(csas_mysqli_fetch_all);
+PHP_FUNCTION(csas_mysqli_fetch_object);
+PHP_FUNCTION(csas_mysqli_fetch_row);
+
+PHP_FUNCTION(csas_pdo_fetch);
+PHP_FUNCTION(csas_pdo_fetch_all);
+PHP_FUNCTION(csas_pdo_fetch_column);
+PHP_FUNCTION(csas_pdo_fetch_object);
 
 PHP_FUNCTION(html_quoted_sanitize);
 PHP_FUNCTION(html_unquoted_sanitize);
