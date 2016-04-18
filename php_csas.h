@@ -62,7 +62,7 @@ extern zend_module_entry csas_module_entry;
 #define PHP_CSAS_SAFE_JS_STRING    (1 << 7)
 #define PHP_CSAS_SAFE_ALL          0xFFFFFFFF
 
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4) 
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4)
 #  define CSAS_OP1_TYPE(n)         ((n)->op1.op_type)
 #  define CSAS_OP2_TYPE(n)         ((n)->op2.op_type)
 #  define CSAS_OP1_NODE_PTR(n)     (&(n)->op1)
@@ -98,7 +98,7 @@ extern zend_module_entry csas_module_entry;
 	} while (0)
 #endif
 
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 3) 
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 3)
 #  define CSAS_ARG_PUSH(v)         zend_ptr_stack_push(&EG(argument_stack), v TSRMLS_CC)
 #else
 #  define CSAS_ARG_PUSH(v)         zend_vm_stack_push(v TSRMLS_CC)
@@ -196,8 +196,8 @@ extern zend_module_entry csas_module_entry;
 #  define Z_ADDREF_P   ZVAL_ADDREF
 #  define Z_REFCOUNT_P ZVAL_REFCOUNT
 #  define Z_DELREF_P   ZVAL_DELREF
-#  define Z_SET_REFCOUNT_P(pz, rc)  (pz)->refcount = rc 
-#  define Z_UNSET_ISREF_P(pz) (pz)->is_ref = 0 
+#  define Z_SET_REFCOUNT_P(pz, rc)  (pz)->refcount = rc
+#  define Z_UNSET_ISREF_P(pz) (pz)->is_ref = 0
 #  define Z_ISREF_P(pz)       (pz)->is_ref
 #endif
 
@@ -254,6 +254,13 @@ PHP_FUNCTION(csas_printf);
 PHP_FUNCTION(csas_vprintf);
 
 PHP_FUNCTION(csas_mysqli_result_fetch_assoc);
+
+PHP_FUNCTION(html_quoted_sanitize);
+PHP_FUNCTION(html_unquoted_sanitize);
+PHP_FUNCTION(js_sanitize);
+PHP_FUNCTION(url_query_sanitize);
+PHP_FUNCTION(url_start_sanitize);
+PHP_FUNCTION(url_general_sanitize);
 
 typedef void (*php_func)(INTERNAL_FUNCTION_PARAMETERS);
 
