@@ -22,5 +22,5 @@ char* pre_escape_sanitize(const char* op1, int *len);
 char* html_unquoted_escape_sanitize(const char* op1, int *len);
 char* javascript_escape_sanitize(const char* op1, int *len);
 char* url_query_escape_sanitize(const char* op1, int *len);
-char *url_start_sanitize(const char* op1, int *len);
-char *url_general_sanitize(const char* op1, int *len);
+char *url_start_escape_sanitize(const char* op1, int *len);
+char *url_general_escape_sanitize(const char* op1, int *len);

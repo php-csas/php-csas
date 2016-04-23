@@ -254,8 +254,6 @@ char* javascript_escape_sanitize(const char* op1, int *len)
     }
     pos = next_pos;
   }
-  printf("%d\n", *len);
-  printf("%d\n", j);
   /*Fill in new string*/
   pos = op1;
   buf = (char*) emalloc(j+1);
@@ -302,7 +300,6 @@ char* javascript_escape_sanitize(const char* op1, int *len)
     pos = next_pos;
   }
   *len = j;
-  printf("%d", *len);
   buf[j] = '\0';
   return buf;
 }
@@ -368,33 +365,32 @@ char* url_query_escape_sanitize(const char* op1, int *len)
   return buf;
 }
 
-char *url_start_sanitize(const char* op1, int *len){
+char *url_start_escape_sanitize(const char* op1, int *len){
   int i;
   char *buf;
   char *colon;
   /*check to see if valid protocol (http, https, mailto)*/
-  if (*len >=8  && strncmp(op1, "https://", 8) == 0) return op1;
-  if (*len >= 7 && strncmp(op1, "http://", 7) == 0) return op1;
-  if (*len >= 6 && strncmp(op1, "mailto:", 6) == 0) return op1;
+  if (*len >=8  && strncmp(op1, "https://", 8) == 0) return estrndup(op1, *len);
+  if (*len >= 7 && strncmp(op1, "http://", 7) == 0) return estrndup(op1, *len);
+  if (*len >= 6 && strncmp(op1, "mailto:", 6) == 0) return estrndup(op1, *len);
 
   *len = 0;
-  return estrndup("", 0);
+  return estrndup("\0", 0);
 }
 
-char *url_general_sanitize(const char* op1, int *len){
+char *url_general_escape_sanitize(const char* op1, int *len){
   char *buf;
   int i, j;
   for (i = 0; i < *len; i++){
-    /*filter out non-safe url characters*/
     if (op1[i] < 33 || op1[i]>126) continue;
-    /*filter out potential html*/
     switch (op1[i]){
       default: j++; break;
       case '&': j+=5; break;
-      case '"': j+=7; break;
+      case '"': j+=6; break;
       case '\'': j+=5; break;
       case '<': j+=4; break;
       case '>':  j+=4; break;
+      case '\r': case '\n': case '\v': case '\f': case '\t': j++; break;
     }
   }
   buf = (char*)emalloc(sizeof(char)*j+1);
@@ -403,23 +399,20 @@ char *url_general_sanitize(const char* op1, int *len){
   }
   j = 0;
   for (i = 0; i < *len; i++){
-    /*filter out unsafe uri characters*/
     if (op1[i] < 33 || op1[i]>126) continue;
-    /*filter out potential html*/
     switch (op1[i]){
       default: buf[j] = op1[i]; j++; break;
       case '&': strcpy(buf+j,"&amp;"); j+=5; break;
-      case '"': strcpy(buf+j,"&quot;"); j+=8; break;
+      case '"': strcpy(buf+j,"&quot;"); j+=6; break;
       case '\'': strcpy(buf+j,"&#39;"); j+=5; break;
       case '<': strcpy(buf+j, "&lt;"); j+=4; break;
       case '>': strcpy(buf+j,"&gt;"); j+=4; break;
     }
   }
-  *len = i;
   buf[j] = '\0';
+  *len = j;
   return buf;
 }
-
 main(){
   char * buf;
   int *len;
