@@ -5,7 +5,7 @@ Fixed bug that csased info lost if a string is parsed by htmlspecialchars
 --INI--
 csas.enable=1
 --FILE--
-<?php 
+<?php
 $a = "csased string" . ".";
 csas($a); //must use concat to make the string not a internal string(introduced in 5.4)
 
@@ -14,5 +14,5 @@ var_dump(is_csased($b));
 var_dump(is_csased($a));
 ?>
 --EXPECTF--
-bool(false)
+bool(true)
 bool(true)

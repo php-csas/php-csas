@@ -6,14 +6,8 @@ If js sanitizer is working
 csas.enable=1
 --FILE--
 <?php
-function main() {
-    global $var;
-    $a = "<a> \0 \' \\ & \" = \b \r \n \v \f \t</a>";
-    js_sanitizer($a);
-}
-
-main();
-echo $var;
-?>
+  $a = "\0\"\\'=&<>\f\t\n\r\b\v";
+  $a = js_sanitize($a);
+  var_dump($a);
 --EXPECTF--
-\x3ca\x3e \x00 \x27 \\ \x26 \x22 \x3d \b \r \n \x0b \f \t\x3c/a\x3e
+string(45) "\x00\x22\\\x27\x3d\x26\x3c\x3e\f\t\n\r\\b\x0b"

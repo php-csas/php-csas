@@ -6,19 +6,15 @@ Bug #63100 (array_walk_recursive behaves wrongly when csas enabled)
 csas.enable=1
 report_memleaks=0
 --FILE--
-<?php 
+<?php
 $a = array();
 $a[0] = "csased string" . "<>";
 csas($a[0]);
-
 function xxx(&$item) {
     $item = htmlspecialchars($item);
 }
-
 array_walk_recursive($a, "xxx");
-
-echo $a[0];
-
+var_dump($a[0]);
 ?>
 --EXPECTF--
-csased string&lt;&gt;
+string(21) "csased string&lt;&gt;"

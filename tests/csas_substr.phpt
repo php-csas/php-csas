@@ -18,9 +18,6 @@ $var = substr("abcdef", 4, -4);  // returns false
 var_dump($var);
 $var = substr("abcdef", -3, -1); // returns "de"
 var_dump($var);
-
-var_dump(csas_get_safety($rest) == 0xFFFFFFFF);
-var_dump(csas_get_safety($var) == 0xFFFFFFFF);
 ?>
 
 
@@ -33,5 +30,3 @@ string(5) "abcde"
 string(3) "cde"
 bool(false)
 string(2) "de"
-bool(false)
-bool(true)

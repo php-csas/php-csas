@@ -8,7 +8,6 @@ csas_trim() function - basic test for csas_trim()
   var_dump($text, $binary, $hello);
 
   print "\n";
-  $text = make_unsafe($text);
   $trimmed = trim($text);
   var_dump($trimmed);
 
@@ -26,13 +25,10 @@ csas_trim() function - basic test for csas_trim()
   // (from 0 to 31 inclusive)
   $clean = trim($binary, "\x00..\x1F");
   var_dump($clean);
-
-
-  var_dump((csas_get_safety($text)!=0xFFFFFFFF) && (get_safety($clean)))
 ?>
 --EXPECT--
-string(32) "        These are a few words :) ...  "
-string(16) "    Example string
+string(32) "		These are a few words :) ...  "
+string(16) "	Example string
 "
 string(11) "Hello World"
 
@@ -41,4 +37,3 @@ string(24) "These are a few words :)"
 string(5) "o Wor"
 string(9) "ello Worl"
 string(14) "Example string"
-bool(false)

@@ -14,8 +14,9 @@
   +----------------------------------------------------------------------+
   | Author:  Xinchen Hui    <laruence@php.net>                           |
   +----------------------------------------------------------------------+
+
   +----------------------------------------------------------------------+
-  | CSAS                                                                |
+  | CSAS                                                                 |
   +----------------------------------------------------------------------+
   | Copyright (c) 2012-2015 The PHP Group                                |
   +----------------------------------------------------------------------+
@@ -28,6 +29,11 @@
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
   | Author:  Matt Van Gundy    <mvangund@cisco.com>                      |
+  |          Jared Smith       <jms@vols.utk.edu>                        |
+  |          Joseph Connor     <rconnor6@vols.utk.edu>                   |
+  |          David Cunningham  <davpcunn@vols.utk.edu>                   |
+  |          Kyle Bashour      <kbashour@vols.utk.edu>                   |
+  |          Travis working    <wwork@vols.utk.edu>                      |
   +----------------------------------------------------------------------+
 */
 
@@ -62,7 +68,7 @@ extern zend_module_entry csas_module_entry;
 #define PHP_CSAS_SAFE_JS_STRING    (1 << 7)
 #define PHP_CSAS_SAFE_ALL          0xFFFFFFFF
 
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4) 
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4)
 #  define CSAS_OP1_TYPE(n)         ((n)->op1.op_type)
 #  define CSAS_OP2_TYPE(n)         ((n)->op2.op_type)
 #  define CSAS_OP1_NODE_PTR(n)     (&(n)->op1)
@@ -98,7 +104,7 @@ extern zend_module_entry csas_module_entry;
 	} while (0)
 #endif
 
-#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 3) 
+#if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 3)
 #  define CSAS_ARG_PUSH(v)         zend_ptr_stack_push(&EG(argument_stack), v TSRMLS_CC)
 #else
 #  define CSAS_ARG_PUSH(v)         zend_vm_stack_push(v TSRMLS_CC)
@@ -196,8 +202,8 @@ extern zend_module_entry csas_module_entry;
 #  define Z_ADDREF_P   ZVAL_ADDREF
 #  define Z_REFCOUNT_P ZVAL_REFCOUNT
 #  define Z_DELREF_P   ZVAL_DELREF
-#  define Z_SET_REFCOUNT_P(pz, rc)  (pz)->refcount = rc 
-#  define Z_UNSET_ISREF_P(pz) (pz)->is_ref = 0 
+#  define Z_SET_REFCOUNT_P(pz, rc)  (pz)->refcount = rc
+#  define Z_UNSET_ISREF_P(pz) (pz)->is_ref = 0
 #  define Z_ISREF_P(pz)       (pz)->is_ref
 #endif
 
@@ -272,6 +278,13 @@ PHP_FUNCTION(csas_pdo_fetch);
 PHP_FUNCTION(csas_pdo_fetch_all);
 PHP_FUNCTION(csas_pdo_fetch_column);
 PHP_FUNCTION(csas_pdo_fetch_object);
+
+PHP_FUNCTION(html_quoted_sanitize);
+PHP_FUNCTION(html_unquoted_sanitize);
+PHP_FUNCTION(js_sanitize);
+PHP_FUNCTION(url_query_sanitize);
+PHP_FUNCTION(url_start_sanitize);
+PHP_FUNCTION(url_general_sanitize);
 
 typedef void (*php_func)(INTERNAL_FUNCTION_PARAMETERS);
 

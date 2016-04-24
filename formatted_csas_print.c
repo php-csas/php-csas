@@ -14,6 +14,27 @@
    +----------------------------------------------------------------------+
    | Author: Stig Sæther Bakken <ssb@php.net>                             |
    +----------------------------------------------------------------------+
+
+  +----------------------------------------------------------------------+
+  | CSAS                                                                 |
+  +----------------------------------------------------------------------+
+  | Copyright (c) 2012-2015 The PHP Group                                |
+  +----------------------------------------------------------------------+
+  | This source file is subject to version 3.01 of the PHP license,      |
+  | that is bundled with this package in the file LICENSE, and is        |
+  | available through the world-wide-web at the following url:           |
+  | http://www.php.net/license/3_01.txt                                  |
+  | If you did not receive a copy of the PHP license and are unable to   |
+  | obtain it through the world-wide-web, please send a note to          |
+  | license@php.net so we can mail you a copy immediately.               |
+  +----------------------------------------------------------------------+
+  | Author:  Matt Van Gundy    <mvangund@cisco.com>                      |
+  |          Jared Smith       <jms@vols.utk.edu>                        |
+  |          Joseph Connor     <rconnor6@vols.utk.edu>                   |
+  |          David Cunningham  <davpcunn@vols.utk.edu>                   |
+  |          Kyle Bashour      <kbashour@vols.utk.edu>                   |
+  |          Travis working    <wwork@vols.utk.edu>                      |
+  +----------------------------------------------------------------------+
  */
 
 /* $Id$ */
@@ -81,7 +102,7 @@ php_sprintf_appendstring(char **buffer, int *pos, int *size, char *add,
 	if (npad < 0) {
 		npad = 0;
 	}
-	
+
 	PRINTF_DEBUG(("sprintf: appendstring(%x, %d, %d, \"%s\", %d, '%c', %d)\n",
 				  *buffer, *pos, *size, add, min_width, padding, alignment));
 	m_width = MAX(min_width, copy_len);
@@ -95,7 +116,7 @@ php_sprintf_appendstring(char **buffer, int *pos, int *size, char *add,
 	if (req_size > *size) {
 		while (req_size > *size) {
 			if(*size > INT_MAX/2) {
-				zend_error_noreturn(E_ERROR, "Field width %d is too long", req_size); 
+				zend_error_noreturn(E_ERROR, "Field width %d is too long", req_size);
 			}
 			*size <<= 1;
 		}
@@ -127,7 +148,7 @@ php_sprintf_appendstring(char **buffer, int *pos, int *size, char *add,
 /* php_spintf_appendint() {{{ */
 inline static void
 php_sprintf_appendint(char **buffer, int *pos, int *size, long number,
-						int width, char padding, int alignment, 
+						int width, char padding, int alignment,
 						int always_sign)
 {
 	char numbuf[NUM_BUF_SIZE];
@@ -225,7 +246,7 @@ php_sprintf_appenddouble(char **buffer, int *pos,
 		php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Requested precision of %d digits was truncated to PHP maximum of %d digits", precision, MAX_FLOAT_PRECISION);
 		precision = MAX_FLOAT_PRECISION;
 	}
-	
+
 	if (zend_isnan(number)) {
 		is_negative = (number<0);
 		php_sprintf_appendstring(buffer, pos, size, "NaN", 3, 0, padding,
@@ -240,7 +261,7 @@ php_sprintf_appenddouble(char **buffer, int *pos,
 		return;
 	}
 
-	switch (fmt) {			
+	switch (fmt) {
 		case 'e':
 		case 'E':
 		case 'f':
@@ -383,12 +404,12 @@ php_formatted_print(int ht, int *len, int use_array, int format_offset TSRMLS_DC
 	}
 
 	/* verify the number of args */
-	if ((use_array && argc != (2 + format_offset)) 
+	if ((use_array && argc != (2 + format_offset))
 			|| (!use_array && argc < (1 + format_offset))) {
 		efree(args);
 		WRONG_PARAM_COUNT_WITH_RETVAL(NULL);
 	}
-	
+
 	if (use_array) {
 		int i = 1;
 		zval ***newargs;
@@ -396,14 +417,14 @@ php_formatted_print(int ht, int *len, int use_array, int format_offset TSRMLS_DC
 
 		z_format = args[format_offset];
 		array = args[1 + format_offset];
-		
+
 		SEPARATE_ZVAL(array);
 		convert_to_array_ex(array);
-		
+
 		argc = 1 + zend_hash_num_elements(Z_ARRVAL_PP(array));
 		newargs = (zval ***)safe_emalloc(argc, sizeof(zval *), 0);
 		newargs[0] = z_format;
-		
+
 		for (zend_hash_internal_pointer_reset(Z_ARRVAL_PP(array));
 			 zend_hash_get_current_data(Z_ARRVAL_PP(array), (void **)&newargs[i++]) == SUCCESS;
 			 zend_hash_move_forward(Z_ARRVAL_PP(array)));
@@ -412,7 +433,7 @@ php_formatted_print(int ht, int *len, int use_array, int format_offset TSRMLS_DC
 		args = newargs;
 		format_offset = 0;
 	}
-	
+
 	convert_to_string_ex(args[format_offset]);
 	format = Z_STRVAL_PP(args[format_offset]);
 	format_len = Z_STRLEN_PP(args[format_offset]);
@@ -601,7 +622,7 @@ php_formatted_print(int ht, int *len, int use_array, int format_offset TSRMLS_DC
 											 format[inpos], always_sign
 											 TSRMLS_CC);
 					break;
-					
+
 				case 'c':
 					convert_to_long(tmp);
 					php_sprintf_appendchar(&result, &outpos, &size,
@@ -653,12 +674,12 @@ php_formatted_print(int ht, int *len, int use_array, int format_offset TSRMLS_DC
 			inpos++;
 		}
 	}
-	
+
 	efree(args);
-	
+
 	/* possibly, we have to make sure we have room for the terminating null? */
 	result[outpos]=0;
-	*len = outpos;	
+	*len = outpos;
 	return result;
 }
 /* }}} */

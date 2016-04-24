@@ -1,6 +1,6 @@
 /*
- +----------------------------------------------------------------------+
-  | CSAS                                                                |
++----------------------------------------------------------------------+
+  | CSAS                                                                 |
   +----------------------------------------------------------------------+
   | Copyright (c) 2012-2015 The PHP Group                                |
   +----------------------------------------------------------------------+
@@ -13,6 +13,11 @@
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
   | Author:  Matt Van Gundy    <mvangund@cisco.com>                      |
+  |          Jared Smith       <jms@vols.utk.edu>                        |
+  |          Joseph Connor     <rconnor6@vols.utk.edu>                   |
+  |          David Cunningham  <davpcunn@vols.utk.edu>                   |
+  |          Kyle Bashour      <kbashour@vols.utk.edu>                   |
+  |          Travis working    <wwork@vols.utk.edu>                      |
   +----------------------------------------------------------------------+
 */
 
@@ -22,5 +27,5 @@ char* pre_escape_sanitize(const char* op1, int *len);
 char* html_unquoted_escape_sanitize(const char* op1, int *len);
 char* javascript_escape_sanitize(const char* op1, int *len);
 char* url_query_escape_sanitize(const char* op1, int *len);
-char *url_start_sanitize(const char* op1, int *len);
-char *url_general_sanitize(const char* op1, int *len);
+char *url_start_escape_sanitize(const char* op1, int *len);
+char *url_general_escape_sanitize(const char* op1, int *len);

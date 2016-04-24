@@ -1,19 +1,14 @@
 --TEST--
-If html sanitizer is working
+html_unquoted_sanitizer: check functionality
 --SKIPIF--
 <?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
 csas.enable=1
 --FILE--
 <?php
-function main() {
-    global $var;
-    $a = "<a> csased string \\ & \" a\ra\na\va\fa\t</a>";
-    html_sanitizer($a);
-}
-
-main();
-echo $var;
+$a = "&\"'<> `=\f\t\n";
+$a = html_unquoted_sanitize($a);
+echo $a;
 ?>
 --EXPECTF--
-&lt;a&gt; csased string &#39; &amp; &quote; a a a a a &lt;/a&gt;
+&amp;&quot;&#39;&lt;&gt;&#32;&#96;&#61;&#12;&#9;&#10;

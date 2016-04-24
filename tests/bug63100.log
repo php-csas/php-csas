@@ -1,7 +1,0 @@
-
----- EXPECTED OUTPUT
-csased string&lt;&gt;
----- ACTUAL OUTPUT
-csased string&lt;&gt;OP1 is not Null, printing OP1
-csased string&lt;&gt;
----- FAILED
