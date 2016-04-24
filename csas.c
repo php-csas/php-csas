@@ -29,6 +29,11 @@
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
   | Author:  Matt Van Gundy    <mvangund@cisco.com>                      |
+  |          Jared Smith       <jms@vols.utk.edu>                        |
+  |          Joseph Connor     <rconnor6@vols.utk.edu>                   |
+  |          David Cunningham  <davpcunn@vols.utk.edu>                   |
+  |          Kyle Bashour      <kbashour@vols.utk.edu>                   |
+  |          Travis working    <wwork@vols.utk.edu>                      |
   +----------------------------------------------------------------------+
 */
 
