@@ -7,7 +7,10 @@ $servername =
     die('skip mysqli extension not available.');
   }
   if (!extension_loaded('csas')){
-    die('skip csas extension not avaialable.')
+    die('skip csas extension not avaialable.');
+  }
+  if (!extension_loaded("pdo_mysql")){
+    die("skip must have mysql driver installed.");
   }
 ?>
 --INI--
