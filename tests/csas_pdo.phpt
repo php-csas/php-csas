@@ -1,7 +1,6 @@
 --TEST--
 PDO: Testing if overwritten pdo functions are functioning correctly
 --SKIPIF--
-$servername =
 <?php
    if (!extension_loaded('pdo')) {
     die('skip mysqli extension not available.');
@@ -16,6 +15,10 @@ $servername =
 --INI--
 csas.enable=1
 report_memleaks=Off
+--ENV--
+return <<<END
+MYSQL_TEST_PASSWD=1234
+END;
 --FILE--
 <?php
   require_once("connect.inc");

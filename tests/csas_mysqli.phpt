@@ -13,6 +13,10 @@ mysqli: Testing if overwritten mysqli functions are functioning correctly
 csas.enable=1
 report_memleaks=Off
 mysql.default_socket=/var/run/mysqld/mysqld.sock
+--ENV--
+return <<<END
+MYSQL_TEST_PASSWD=1234
+END;
 --FILE--
 <?php
   require_once("connect.inc");
