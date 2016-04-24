@@ -3102,17 +3102,15 @@ PHP_FUNCTION(csas_socket_read) {
     }
 }
 PHP_FUNCTION(csas_socket_recv) {
-    zval *socket, *buf, *len, *flags;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zzzz", &socket, &buf, &len, &flags) == FAILURE) {
+    zval *socket, *buf;
+    long len, flags;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzll", &socket, &buf, &len, &flags) == FAILURE) {
         ZVAL_FALSE(return_value);
         WRONG_PARAM_COUNT;
     }
-
     CSAS_O_FUNC(socket_recv)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-
     if (buf && Z_TYPE_P(buf) == IS_STRING) {
-        Z_STRVAL_P(buf) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        Z_STRVAL_P(buf) = erealloc(Z_STRVAL_P(buf), Z_STRLEN_P(buf) + 1 + PHP_CSAS_MAGIC_LENGTH);
         php_csas_set_safety(buf, PHP_CSAS_UNSAFE);
     }
 }
@@ -3127,7 +3125,7 @@ PHP_FUNCTION(csas_socket_recvfrom) {
     CSAS_O_FUNC(socket_recvfrom)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 
     if (buf && Z_TYPE_P(buf) == IS_STRING) {
-        Z_STRVAL_P(buf) = erealloc(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value) + 1 + PHP_CSAS_MAGIC_LENGTH);
+        Z_STRVAL_P(buf) = erealloc(Z_STRVAL_P(buf), Z_STRLEN_P(buf) + 1 + PHP_CSAS_MAGIC_LENGTH);
         php_csas_set_safety(buf, PHP_CSAS_UNSAFE);
     }
 }
@@ -4075,7 +4073,7 @@ Sanitizer Wrapper functions:
 **********************************************************/
 
 PHP_FUNCTION(html_quoted_sanitize){
-    long str_len;
+    int str_len;
     char *str = NULL;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &str, &str_len) == FAILURE){
         return;
