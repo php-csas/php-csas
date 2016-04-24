@@ -2506,6 +2506,7 @@ static int php_csas_do_fcall_by_name_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */
 static int php_csas_assign_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zend_op *opline = execute_data->opline;
     zval **op1 = NULL, **op2 = NULL;
+    uint safety;
 
     switch (CSAS_OP2_TYPE(opline)) {
         case IS_VAR:
@@ -2529,8 +2530,9 @@ static int php_csas_assign_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
             break;
     }
 
+    safety = php_csas_get_safety(*op2);
     if (!op2 || *op2 == &EG(error_zval) || Z_TYPE_PP(op2) != IS_STRING || !Z_STRLEN_PP(op2) 
-            || (php_csas_get_safety(*op2) == PHP_CSAS_SAFE_ALL)) {
+            || (safety == PHP_CSAS_SAFE_ALL)) {
         return ZEND_USER_OPCODE_DISPATCH;
     }
 
@@ -2564,14 +2566,14 @@ static int php_csas_assign_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         zval_copy_ctor(*op1);
         zval_dtor(&garbage);
         Z_STRVAL_PP(op1) = erealloc(Z_STRVAL_PP(op1), Z_STRLEN_PP(op1) + 1 + PHP_CSAS_MAGIC_LENGTH);
-        php_csas_set_safety(*op1, PHP_CSAS_UNSAFE);
+        php_csas_set_safety(*op1, safety);
 
         execute_data->opline++;
         return ZEND_USER_OPCODE_CONTINUE;
     } else if (PZVAL_IS_REF(*op2) && Z_REFCOUNT_PP(op2) > 1) {
         SEPARATE_ZVAL(op2);
         Z_STRVAL_PP(op2) = erealloc(Z_STRVAL_PP(op2), Z_STRLEN_PP(op2) + 1 + PHP_CSAS_MAGIC_LENGTH);
-        php_csas_set_safety(*op2, PHP_CSAS_UNSAFE);
+        php_csas_set_safety(*op2, safety);
     }
 
     return ZEND_USER_OPCODE_DISPATCH;
@@ -2639,7 +2641,7 @@ static int php_csas_assign_ref_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         Z_ADDREF_P(*op2);
         Z_SET_ISREF_PP(op2);
         Z_STRVAL_PP(op2) = erealloc(Z_STRVAL_PP(op2), Z_STRLEN_PP(op2) + 1 + PHP_CSAS_MAGIC_LENGTH);
-        php_csas_set_safety(*op2, PHP_CSAS_UNSAFE);
+        php_csas_set_safety(*op2, php_csas_get_safety(*op1));
     }
 
     return ZEND_USER_OPCODE_DISPATCH;
@@ -2649,6 +2651,8 @@ static int php_csas_send_ref_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zend_op *opline = execute_data->opline;
     zval **op1 = NULL;
     csas_free_op free_op1 = {0};
+    uint safety;
+
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 5)
     if (execute_data->function_state.function->type == ZEND_INTERNAL_FUNCTION
             && !ARG_SHOULD_BE_SENT_BY_REF(execute_data->call->fbc, CSAS_OP_LINENUM(opline->op2))) {
@@ -2679,16 +2683,18 @@ static int php_csas_send_ref_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
             break;
     }
 
+    safety = php_csas_get_safety(*op1);
+
     if (!op1 || *op1 == &EG(error_zval) || *op1 == &EG(uninitialized_zval) || IS_STRING != Z_TYPE_PP(op1) 
              || PZVAL_IS_REF(*op1) || Z_REFCOUNT_PP(op1) < 2 || !Z_STRLEN_PP(op1) 
-             || php_csas_get_safety(*op1) == PHP_CSAS_SAFE_ALL) {
+             || safety == PHP_CSAS_SAFE_ALL) {
         return ZEND_USER_OPCODE_DISPATCH;
     }
 
     SEPARATE_ZVAL_TO_MAKE_IS_REF(op1);
     Z_ADDREF_P(*op1);
     Z_STRVAL_PP(op1) = erealloc(Z_STRVAL_PP(op1), Z_STRLEN_PP(op1) + 1 + PHP_CSAS_MAGIC_LENGTH);
-    php_csas_set_safety(*op1, PHP_CSAS_UNSAFE);
+    php_csas_set_safety(*op1, safety);
     CSAS_ARG_PUSH(*op1);
 
     switch(CSAS_OP1_TYPE(opline)) {
@@ -2708,6 +2714,8 @@ static int php_csas_send_var_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     zval **op1 = NULL;
     csas_free_op free_op1 = {0};
     zval *varptr;
+    uint safety;
+
 #if (PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 5)
     if ((opline->extended_value == ZEND_DO_FCALL_BY_NAME)
             && ARG_SHOULD_BE_SENT_BY_REF(execute_data->call->fbc, CSAS_OP_LINENUM(opline->op2))) {
@@ -2738,9 +2746,10 @@ static int php_csas_send_var_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
             break;
     }
 
+    safety = php_csas_get_safety(*op1);
     if (!op1 || *op1 == &EG(error_zval) || *op1 == &EG(uninitialized_zval) || IS_STRING != Z_TYPE_PP(op1) 
             || !PZVAL_IS_REF(*op1) || Z_REFCOUNT_PP(op1) < 2 || !Z_STRLEN_PP(op1) 
-            || (php_csas_get_safety(*op1) == PHP_CSAS_SAFE_ALL)) {
+            || (safety == PHP_CSAS_SAFE_ALL)) {
         return ZEND_USER_OPCODE_DISPATCH;
     }
 
@@ -2749,7 +2758,7 @@ static int php_csas_send_var_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
     Z_SET_REFCOUNT_P(varptr, 0);
     zval_copy_ctor(varptr);
     Z_STRVAL_P(varptr) = erealloc(Z_STRVAL_P(varptr), Z_STRLEN_P(varptr) + 1 + PHP_CSAS_MAGIC_LENGTH);
-    php_csas_set_safety(varptr, PHP_CSAS_UNSAFE);
+    php_csas_set_safety(varptr, safety);
 
     Z_ADDREF_P(varptr);
     CSAS_ARG_PUSH(varptr);
