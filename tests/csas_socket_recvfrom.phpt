@@ -13,47 +13,47 @@ if (!extension_loaded("csas")){
 csas.enable=1
 --FILE--
 <?php
-    $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-    if (!$socket) {
-        die('Unable to create AF_INET socket');
+  /* Setup socket server */
+  $server = socket_create(AF_INET, SOCK_STREAM, getprotobyname('tcp'));
+  if (!$server) {
+    die('Unable to create AF_INET socket [server]');
+  }
+  $bound = false;
+  for($port = 31337; $port < 31357; ++$port) {
+    if (socket_bind($server, '127.0.0.1', $port)) {
+      $bound = true;
+      break;
     }
-    if (!socket_set_nonblock($socket)) {
-        die('Unable to set nonblocking mode for socket');
-    }
+  }
+  if (!$bound) {
+    die("Unable to bind to 127.0.0.1");
+  }
+  if (!socket_listen($server, 2)) {
+    die('Unable to listen on socket');
+  }
 
-    $address = '127.0.0.1';
-    socket_sendto($socket, '', 1, 0, $address); // cause warning
-    if (!socket_bind($socket, $address, 1223)) {
-        die("Unable to bind to $address:1223");
-    }
-
-  var_dump(socket_recvfrom($socket, $buf, 12, 0, $from, $port)); //false (EAGAIN - no warning)
-    $msg = "Ping!";
-    $len = strlen($msg);
-    $bytes_sent = socket_sendto($socket, $msg, $len, 0, $address, 1223);
-    if ($bytes_sent == -1) {
-        die('An error occurred while sending to the socket');
-    } else if ($bytes_sent != $len) {
-        die($bytes_sent . ' bytes have been sent instead of the ' . $len . ' bytes expected');
-    }
-    $from = "";
-    $port = 0;
-    socket_recvfrom($socket, $buf, 12, 0); // cause warning
-    socket_recvfrom($socket, $buf, 12, 0, $from); // cause warning
-    $bytes_received = socket_recvfrom($socket, $buf, 12, 0, $from, $port);
-    if ($bytes_received == -1) {
-        die('An error occurred while receiving from the socket');
-    } else if ($bytes_received != $len) {
-        die($bytes_received . ' bytes have been received instead of the ' . $len . ' bytes expected');
-    }
-    echo "Received $buf from remote address $from and remote port $port" . PHP_EOL;
-    socket_close($socket);
+  /* Connect to it */
+  $client = socket_create(AF_INET, SOCK_STREAM, getprotobyname('tcp'));
+  if (!$client) {
+    die('Unable to create AF_INET socket [client]');
+  }
+  if (!socket_connect($client, '127.0.0.1', $port)) {
+    die('Unable to connect to server socket');
+  }
+  /* Accept that connection */
+  $socket = socket_accept($server);
+  if (!$socket) {
+    die('Unable to accept connection');
+  }
+  socket_send($client, "ABCdef123\n", 10, 0);
+  $data = "1234567890";
+  $host = "127.0,0,1";
+  socket_recvfrom($socket, $data, 10, MSG_WAITALL, $host, $port);
+  var_dump($data);
+  socket_close($client);
+  socket_close($socket);
+  socket_close($server);
+?>
 --EXPECTF--
-Warning: Wrong parameter count for socket_sendto() in %s on line %d
-bool(false)
-Warning: socket_recvfrom() expects at least 5 parameters, 4 given in %s on line %d
-Warning: Wrong parameter count for socket_recvfrom() in %s on line %d
-Received Ping! from remote address 127.0.0.1 and remote port 1223
---CREDITS--
-Falko Menge <mail at falko-menge dot de>
-PHP Testfest Berlin 2009-05-09
+string(10) "ABCdef123
+"

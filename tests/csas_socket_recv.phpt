@@ -1,41 +1,59 @@
 --TEST--
-test if socket_recv still works after modification
+csas_socket_recv
 --SKIPIF--
 <?php
-if (!extension_loaded('sockets'))
-  die('skip sockets extension not available.');
-if (PHP_OS != 'Linux') {
-  die('skip For Linux only');
-}
-if (!extension_loaded('csas'))
-  die('skip sockets extension not available.');
+  if (!extension_loaded('sockets')) {
+    die('skip sockets extension not available.');
+  }
+  if (!extension_loaded('csas')){
+    die('skip csas extension not available');
+  }
 ?>
 --INI--
-csas.enabled = 1
+csas.enable=1
+report_memleaks=Off
 --FILE--
 <?php
-include __DIR__."/mcast_helpers.php.inc";
-$path = "\x00/foo_bar";
-echo "creating server socket\n";
-$servers = socket_create(AF_UNIX, SOCK_STREAM, 0) or die("err");
-socket_bind($servers, $path) or die("Could not bind");
-socket_listen($servers) or die("Could not listen");
-socket_set_nonblock($servers) or die("Could not put in non-blocking mode");
-echo "creating client socket\n";
-$clients = socket_create(AF_UNIX, SOCK_STREAM, 0) or die("err");
-socket_connect($clients, $path) or die("Error connecting");
-$conns = socket_accept($servers) or die("Could not accept connection");
-$r = socket_sendmsg($clients, [
-  //"name" => [ "addr" => $path, ],
-  "iov" => ["test ", "thing", "\n"],
-], 0);
-var_dump($r);
-checktimeout($conns, 500);
-if (!socket_recv($conns, $buf, 20, 0)) die("recv");
-print_r($buf);
+  /* Setup socket server */
+  $server = socket_create(AF_INET, SOCK_STREAM, getprotobyname('tcp'));
+  if (!$server) {
+    die('Unable to create AF_INET socket [server]');
+  }
+  $bound = false;
+  for($port = 31337; $port < 31357; ++$port) {
+    if (socket_bind($server, '127.0.0.1', $port)) {
+      $bound = true;
+      break;
+    }
+  }
+  if (!$bound) {
+    die("Unable to bind to 127.0.0.1");
+  }
+  if (!socket_listen($server, 2)) {
+    die('Unable to listen on socket');
+  }
+
+  /* Connect to it */
+  $client = socket_create(AF_INET, SOCK_STREAM, getprotobyname('tcp'));
+  if (!$client) {
+    die('Unable to create AF_INET socket [client]');
+  }
+  if (!socket_connect($client, '127.0.0.1', $port)) {
+    die('Unable to connect to server socket');
+  }
+  /* Accept that connection */
+  $socket = socket_accept($server);
+  if (!$socket) {
+    die('Unable to accept connection');
+  }
+  socket_send($client, "ABCdef123\n", 10, 0);
+  $data = "1234567890";
+  socket_recv($socket, $data, 10, MSG_WAITALL);
+  var_dump($data);
+  socket_close($client);
+  socket_close($socket);
+  socket_close($server);
 ?>
---EXPECTF--
-creating server socket
-creating client socket
-int(11)
-test thing
+--EXPECT--
+string(10) "ABCdef123
+"
