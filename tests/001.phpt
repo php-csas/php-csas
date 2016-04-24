@@ -4,7 +4,7 @@ Check for php-csas presence
 <?php if (!extension_loaded("csas")) print "skip"; ?>
 --FILE--
 <?php
-echo "php-csas extension is available";
+echo "csas extension is available";
 /*
 	you can add regression tests for your extension here
 
