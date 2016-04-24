@@ -4,6 +4,7 @@ Bug #61816 (Segmentation fault)
 <?php if (!extension_loaded("csas")) print "skip"; ?>
 --INI--
 csas.enable=1
+report_memleaks=Off
 --FILE--
 <?php
 $a = "csased string" . ".\n";
@@ -21,5 +22,4 @@ var_dump(is_csased($c->foo));
 bool(true)
 
 Warning: main(): Attempt to echo a string that might be csased in %sbug61816.php on line %d
-csased string.
-bool(true)
+csased string. bool(true)
