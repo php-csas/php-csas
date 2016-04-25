@@ -28,12 +28,13 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author:  Matt Van Gundy    <mvangund@cisco.com>                      |
+  | Authors:                                                             |
   |          Jared Smith       <jms@vols.utk.edu>                        |
   |          Joseph Connor     <rconnor6@vols.utk.edu>                   |
   |          David Cunningham  <davpcunn@vols.utk.edu>                   |
   |          Kyle Bashour      <kbashour@vols.utk.edu>                   |
-  |          Travis working    <wwork@vols.utk.edu>                      |
+  |          Travis Work       <wwork@vols.utk.edu>                      |
+  |          Matt Van Gundy    <mvangund@cisco.com>                      |
   +----------------------------------------------------------------------+
 */
 
