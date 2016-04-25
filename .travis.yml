@@ -11,7 +11,11 @@ env:
 
 # Compile
 before_script:
-    - ./travis/compile.sh
+  - ./travis/compile.sh
 
 # Run PHPs run-tests.php 
 script: make test
+
+# Turn on MySQl
+services:
+  - mysql
