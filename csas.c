@@ -1033,16 +1033,6 @@ static int php_csas_echo_handler(ZEND_OPCODE_HANDLER_ARGS) /* {{{ */ {
         char* s = cast_zval_to_string(op1);
         int len = Z_STRLEN_P(op1);
 
-        //php_printf("Required safety: %s<br>", get_safety_name(get_safety_needed()));
-        //php_printf("About to echo with safety: %s<br>\n",get_safety_name(safety));
-        //add error checking
-        if (safety!=PHP_CSAS_SAFE_ALL){
-            if (ZEND_ECHO == opline->opcode) {
-                php_csas_error("function.echo" TSRMLS_CC, "Attempt to echo a string that might be csased");
-            } else {
-                php_csas_error("function.print" TSRMLS_CC, "Attempt to print a string that might be csased");
-            }
-        }
         php_csas_safe_write(s, len, safety TSRMLS_CC);
     }
 
